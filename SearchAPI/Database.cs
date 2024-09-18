@@ -171,22 +171,63 @@ namespace ConsoleSearch
             return result;
         }
 
-        public List<int> GetWordIds(string[] query, out List<string> outIgnored)
+        // public List<int> GetWordIds(string[] query, out List<string> outIgnored)
+        // {
+        //     if (mWords == null)
+        //         mWords = GetAllWords();
+        //     var res = new List<int>();
+        //     var ignored = new List<string>();
+        //
+        //     foreach (var aWord in query)
+        //     {
+        //         if (mWords.ContainsKey(aWord))
+        //             res.Add(mWords[aWord]);
+        //         else
+        //             ignored.Add(aWord);
+        //     }
+        //     outIgnored = ignored;
+        //     return res;
+        // }
+        
+        //Udvidelse - i forhold til caseSensitive
+        public List<int> GetWordIds(string[] query, bool caseSensitive, out List<string> outIgnored)
         {
             if (mWords == null)
                 mWords = GetAllWords();
             var res = new List<int>();
             var ignored = new List<string>();
-
-            foreach (var aWord in query)
+            if (caseSensitive)
             {
-                if (mWords.ContainsKey(aWord))
-                    res.Add(mWords[aWord]);
-                else
-                    ignored.Add(aWord);
+                foreach (var aWord in query)
+                {
+                    if (mWords.ContainsKey(aWord))
+                        res.Add(mWords[aWord]);
+                    else
+                        ignored.Add(aWord);
+                }
+                outIgnored = ignored;
+                return res;
             }
-            outIgnored = ignored;
-            return res;
+            else // not case-sensitive
+            {
+                foreach (string aWord in query) {
+                    bool found = false;
+                    foreach (var word in mWords) {
+                        if (aWord.Equals(word.Key, StringComparison.InvariantCultureIgnoreCase)) {
+                            if (!res.Contains(word.Value)) {
+                                res.Add(word.Value);
+                                found = true;
+                            }
+                        }
+                    }
+                    if (!found)
+                        ignored.Add(aWord);  
+                }
+                outIgnored = ignored;
+                return res;
+
+            }
         }
+
     }
 }

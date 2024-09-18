@@ -9,7 +9,16 @@ namespace ConsoleSearch
         /// Get id's for words in [query]. [outIgnored] contains those word from query that is
         /// not present in any document.
         /// </summary>
-        List<int> GetWordIds(string[] query, out List<string> outIgnored);
+        // List<int> GetWordIds(string[] query, out List<string> outIgnored);
+        
+        /// <summary>
+        /// Get id's for words in [query]. If case-sensitive is true,
+        /// exact match is used, otherwise it will use an IgnoreCases
+        /// match. Outignored contains those word from query that is
+        /// not present in any document.
+        /// </summary>
+        List<int> GetWordIds(string[] query, bool caseSensitive, out List<string> outIgnored);
+
 
         List<BEDocument> GetDocDetails(List<int> docIds);
 
