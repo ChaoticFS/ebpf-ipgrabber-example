@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using Shared.Model;
 
-namespace ConsoleSearch
+
+namespace SearchAPI
 {
     public class DocumentHit
     {

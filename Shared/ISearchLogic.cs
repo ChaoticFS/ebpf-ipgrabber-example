@@ -1,8 +1,10 @@
 using System;
+using Shared;
 using Shared.Model;
 
 
-namespace ConsoleSearch;
+
+namespace SearchAPI;
 
 public interface ISearchLogic
 {

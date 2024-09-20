@@ -4,7 +4,7 @@ using Shared;
 using Shared.Model;
 using Microsoft.Data.Sqlite;
 
-namespace ConsoleSearch
+namespace Shared.Database
 {
     public class Database : IDatabase
     {
@@ -170,24 +170,25 @@ namespace ConsoleSearch
             }
             return result;
         }
+        
 
-        // public List<int> GetWordIds(string[] query, out List<string> outIgnored)
-        // {
-        //     if (mWords == null)
-        //         mWords = GetAllWords();
-        //     var res = new List<int>();
-        //     var ignored = new List<string>();
-        //
-        //     foreach (var aWord in query)
-        //     {
-        //         if (mWords.ContainsKey(aWord))
-        //             res.Add(mWords[aWord]);
-        //         else
-        //             ignored.Add(aWord);
-        //     }
-        //     outIgnored = ignored;
-        //     return res;
-        // }
+        public List<int> GetWordIds(string[] query, out List<string> outIgnored)
+        {
+            if (mWords == null)
+                mWords = GetAllWords();
+            var res = new List<int>();
+            var ignored = new List<string>();
+        
+            foreach (var aWord in query)
+            {
+                if (mWords.ContainsKey(aWord))
+                    res.Add(mWords[aWord]);
+                else
+                    ignored.Add(aWord);
+            }
+            outIgnored = ignored;
+            return res;
+        }
         
         //Udvidelse - i forhold til caseSensitive
         public List<int> GetWordIds(string[] query, bool caseSensitive, out List<string> outIgnored)
@@ -225,7 +226,7 @@ namespace ConsoleSearch
                 }
                 outIgnored = ignored;
                 return res;
-
+        
             }
         }
 

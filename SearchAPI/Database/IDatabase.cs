@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using Shared.Model;
 
-namespace ConsoleSearch
+
+namespace  Shared.Database
+
 {
     public interface IDatabase
     {
@@ -19,7 +21,8 @@ namespace ConsoleSearch
         /// </summary>
         List<int> GetWordIds(string[] query, bool caseSensitive, out List<string> outIgnored);
 
-
+        List<int> GetWordIds(string[] query, out List<string> outIgnored);
+        
         List<BEDocument> GetDocDetails(List<int> docIds);
 
         /// <summary>

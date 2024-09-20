@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Shared;
 using Shared.Model;
 
-namespace ConsoleSearch
+
+namespace SearchAPI
 {
     /*
      * A data class representing the result of a search.
