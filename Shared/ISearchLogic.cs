@@ -4,7 +4,7 @@ using Shared.Model;
 
 
 
-namespace SearchAPI;
+namespace Shared;
 
 public interface ISearchLogic
 {

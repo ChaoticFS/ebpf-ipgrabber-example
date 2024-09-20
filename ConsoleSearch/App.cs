@@ -1,52 +1,55 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Shared;
 
 namespace ConsoleSearch
 {
     public class App
     {
+        private static readonly HttpClient client = new HttpClient();
+
+        private Config _config = new Config();
+
         public App()
         {
+            // Set the base address to the API's base URL
+            client.BaseAddress = new Uri("http://localhost:5262/");
         }
 
-        public void Run()
+        public async Task RunAsync()
         {
-            SearchLogic mSearchLogic = new SearchLogic(new Database());
-            
-
             Console.WriteLine("Console Search");
-            
+
             while (true)
             {
-                Console.WriteLine("enter search terms - q for quit");
+                Console.WriteLine("Enter search terms - 'q' to quit:");
                 string input = Console.ReadLine();
-                if (input.Equals("q")) break;
+                if (input.Equals("q", StringComparison.OrdinalIgnoreCase)) break;
 
                 var query = input.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-               
+                var queryString = string.Join(",", query);
 
-                var result = mSearchLogic.Search(query, 10);
+                try
+                {
+                    // Make the HTTP GET request to the SearchAPI
+                    var s = $"api/search?query={Uri.EscapeDataString(queryString)}";
+                    var response = await client.GetAsync(s);
+                    response.EnsureSuccessStatusCode();
+                    var responseData = await response.Content.ReadAsStringAsync();
 
-                if (result.Ignored.Count > 0) {
-                    Console.WriteLine($"Ignored: {string.Join(',', result.Ignored)}");
+                    Console.WriteLine("Search results:");
+                    Console.WriteLine(responseData);
                 }
-
-                int idx = 1;
-                foreach (var doc in result.DocumentHits) {
-                    Console.WriteLine($"{idx} : {doc.Document.mUrl} -- contains {doc.NoOfHits} search terms");
-                    Console.WriteLine("Index time: " + doc.Document.mIdxTime);
-                    Console.WriteLine($"Missing: {ArrayAsString(doc.Missing.ToArray())}");
-                    idx++;
+                catch (HttpRequestException ex)
+                {
+                    Console.WriteLine($"Request error: {ex.Message}");
                 }
-                Console.WriteLine("Documents: " + result.Hits + ". Time: " + result.TimeUsed.TotalMilliseconds);
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                }
             }
-        }
-
-        string ArrayAsString(string[] s) {
-            return s.Length == 0?"[]":$"[{String.Join(',', s)}]";
-            //foreach (var str in s)
-            //    res += str + ", ";
-            //return res.Substring(0, res.Length - 2) + "]";
         }
     }
 }

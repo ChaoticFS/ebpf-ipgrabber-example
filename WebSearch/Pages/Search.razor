@@ -1,0 +1,83 @@
+@page "/search"
+@using global::Shared.Model
+@inject HttpClient Http
+
+<h3>Søg efter dokumenter</h3>
+
+<input type="text" @bind="query" placeholder="Indtast søgeord..." />
+<button @onclick="SearchDocuments">Søg</button>
+
+@if (resultCount > 0)
+{
+<p>@resultCount dokumenter fundet:</p>
+
+<button @onclick="ToggleSortById">Sortér efter ID @sortDirection</button>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>URL</th>
+        <th>Indekseringstidspunkt</th>
+        <th>ID</th>
+        <th>Oprettelsestidspunkt</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var doc in searchResults)
+    {
+    <tr>
+        <td>@doc.mUrl</td>
+        <td>@doc.mIdxTime</td>
+        <td>@doc.mId</td>
+        <td>@doc.mCreationTime</td>
+    </tr>
+    }
+    </tbody>
+</table>
+}
+else
+{
+<p>Ingen resultater fundet</p>
+}
+
+@code {
+private string query;
+private List<BEDocument> searchResults = new();
+private int resultCount;
+private bool sortAscending = true; // To toggle sorting direction
+private string sortDirection = "↑"; // Indicator for sorting direction
+
+private async Task SearchDocuments()
+{
+if (string.IsNullOrWhiteSpace(query)) return;
+
+var response = await Http.GetFromJsonAsync<SearchResponse>($"http://localhost:5262/api/Search?query={query}");
+
+searchResults = response.Results;
+resultCount = response.Count;
+}
+
+//################################### Toggle and sort by ID
+private void ToggleSortById()
+{
+if (sortAscending)
+{
+searchResults = searchResults.OrderBy(doc => doc.mId).ToList();
+sortDirection = "↑";
+}
+else
+{
+searchResults = searchResults.OrderByDescending(doc => doc.mId).ToList();
+sortDirection = "↓";
+}
+
+sortAscending = !sortAscending; // Toggle for next click
+}
+//################################### Toggle and sort by ID
+
+public class SearchResponse
+{
+public List<BEDocument> Results { get; set; }
+public int Count { get; set; }
+}
+}

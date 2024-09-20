@@ -134,6 +134,33 @@ namespace Indexer
             insertCmd.ExecuteNonQuery();
 
         }
+        
+        public BEDocument GetDocumentById(int docId)
+        {
+            var selectCmd = _connection.CreateCommand();
+            selectCmd.CommandText = "SELECT id, url, idxTime, creationTime FROM document WHERE id = @id";
+    
+            var paramDocId = selectCmd.CreateParameter();
+            paramDocId.ParameterName = "id";
+            paramDocId.Value = docId;
+            selectCmd.Parameters.Add(paramDocId);
+
+            using (var reader = selectCmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    return new BEDocument
+                    {
+                        mId = reader.GetInt32(0),
+                        mUrl = reader.GetString(1),
+                        mIdxTime = reader.GetString(2),
+                        mCreationTime = reader.GetString(3)
+                    };
+                }
+            }
+            return null;
+        }
+
 
         public Dictionary<string, int> GetAllWords()
         {
@@ -154,6 +181,30 @@ namespace Indexer
             }
             return res;
         }
+        
+        public List<Term> GetAllWordCounts()
+        {
+            var selectCmd = _connection.CreateCommand();
+            selectCmd.CommandText = "select Occ.wordId as Id, count(occ.wordId) as countWord, Word.name as Name "+
+                                    "from Occ JOIN Word on Occ.wordId = Word.id " + 
+                                    "group by Occ.wordId order by countWord DESC";
+
+            List<Term> result = new();
+            using (var reader = selectCmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var id = reader.GetInt32(0);
+                    var cc = reader.GetInt32(1);
+                    var name = reader.GetString(2);
+
+                    result.Add(new Term { Id = id, Value = name, Count = cc});
+                }
+            }
+            return result;
+        }
+        
+        
 
         public int GetDocumentCounts() {
             var selectCmd = _connection.CreateCommand();

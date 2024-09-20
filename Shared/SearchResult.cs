@@ -4,7 +4,7 @@ using Shared;
 using Shared.Model;
 
 
-namespace SearchAPI
+namespace Shared
 {
     /*
      * A data class representing the result of a search.

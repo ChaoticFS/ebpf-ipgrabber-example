@@ -2,7 +2,7 @@
 using Shared.Model;
 
 
-namespace  Shared.Database
+namespace SearchAPI.Database
 
 {
     public interface IDatabase
