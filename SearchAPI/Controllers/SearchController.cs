@@ -51,5 +51,7 @@ namespace SearchAPI.Controllers
                 IgnoredWords = ignoredWords
             });
         }
+
+        
     }
 }

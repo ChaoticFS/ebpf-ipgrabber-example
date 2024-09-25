@@ -26,7 +26,8 @@
     @foreach (var doc in searchResults)
     {
     <tr>
-        <td>@doc.mUrl</td>
+        @* <td>@doc.mUrl</td> *@
+        <td>@doc.GetShortUrl()</td>
         <td>@doc.mIdxTime</td>
         <td>@doc.mId</td>
         <td>@doc.mCreationTime</td>
@@ -75,9 +76,9 @@ sortAscending = !sortAscending; // Toggle for next click
 }
 //################################### Toggle and sort by ID
 
-public class SearchResponse
-{
-public List<BEDocument> Results { get; set; }
-public int Count { get; set; }
-}
+    public class SearchResponse
+    {
+    public List<BEDocument> Results { get; set; }
+    public int Count { get; set; }
+    }
 }
