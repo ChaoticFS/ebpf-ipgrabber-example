@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Shared;
 using Shared.Model;
 using Microsoft.Data.Sqlite;
+using Newtonsoft.Json;
 
 namespace SearchAPI.Database
 {
@@ -229,6 +230,63 @@ namespace SearchAPI.Database
         
             }
         }
+        
+        //DOEST WORK
+        // public List<Synonym> GetSynonyms(string word)
+        // {
+        //     var synonyms = new List<Synonym>();
+        //
+        //     var selectCmd = _connection.CreateCommand();
+        //     selectCmd.CommandText = "SELECT synonym, weight FROM synonym WHERE word = @word";
+        //     selectCmd.Parameters.AddWithValue("@word", word);
+        //
+        //     using (var reader = selectCmd.ExecuteReader())
+        //     {
+        //         while (reader.Read())
+        //         {
+        //             synonyms.Add(new Synonym
+        //             {
+        //                 SynonymText = reader.GetString(0),
+        //                 Weight = reader.GetDouble(1)
+        //             });
+        //         }
+        //     }
+        //
+        //     return synonyms;
+        // }
+
+        public async Task<List<SynonymEntry>> GetSynonymsFromApi(string word)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var apiUrl = $"https://api.api-ninjas.com/v1/thesaurus?word={word}";
+                httpClient.DefaultRequestHeaders.Add("X-Api-Key", "YOUR_API_KEY");
+        
+                var response = await httpClient.GetAsync(apiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var synonyms = JsonConvert.DeserializeObject<List<SynonymEntry>>(jsonResponse);
+                    return synonyms;
+                }
+                else
+                {
+                    // Handle errors appropriately
+                    throw new Exception("Error fetching synonyms from API");
+                }
+            }
+        }
+
+// Model for synonym entries
+        public class SynonymEntry
+        {
+            public string Synonym { get; set; }
+            public double Weight { get; set; }
+        }
+
+
+        
+        
 
     }
 }

@@ -44,5 +44,10 @@ namespace SearchAPI.Database
         /// words
         /// </summary>
         List<string> WordsFromIds(List<int> wordIds);
+        
+        // List<Synonym> GetSynonyms(string word);
+        Task<List<Database.SynonymEntry>> GetSynonymsFromApi(string word);
+
+
     }
 }
