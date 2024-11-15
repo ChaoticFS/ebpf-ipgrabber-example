@@ -1,13 +1,12 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine as build
+﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /app
 
 COPY . .
-RUN dotnet restore
-RUN dotnet publish -o /app
+RUN dotnet publish /app/ConsoleSearch/ConsoleSearch.csproj -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine as runtime
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS runtime
 WORKDIR /app
 
-COPY --from=build /app ./
+COPY --from=build /app/publish ./
 
 ENTRYPOINT ["dotnet", "/app/ConsoleSearch.dll"]

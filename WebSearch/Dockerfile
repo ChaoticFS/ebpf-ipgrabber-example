@@ -1,13 +1,18 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine as build
+﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /app
 
 COPY . .
-RUN dotnet restore
-RUN dotnet publish -o /app
+RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine as runtime
-WORKDIR /app
+FROM nginx:alpine AS runtime
+WORKDIR /usr/share/nginx/html
+EXPOSE 80
+EXPOSE 443
 
-COPY --from=build /app ./
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
-ENTRYPOINT ["dotnet", "/app/WebSearch.dll"]
+COPY WebSearch/nginx.conf /etc/nginx/nginx.conf
+
+RUN rm -rf /etc/nginx/conf.d/*
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

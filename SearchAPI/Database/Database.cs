@@ -1,6 +1,6 @@
 ﻿using Shared.Model;
 using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace SearchAPI.Database;
 public class Database : IDatabase
@@ -270,7 +270,7 @@ public class Database : IDatabase
             if (response.IsSuccessStatusCode)
             {
                 var jsonResponse = await response.Content.ReadAsStringAsync();
-                var synonyms = JsonConvert.DeserializeObject<List<SynonymEntry>>(jsonResponse);
+                var synonyms = JsonSerializer.Deserialize<List<SynonymEntry>>(jsonResponse);
                 return synonyms;
             }
             else
