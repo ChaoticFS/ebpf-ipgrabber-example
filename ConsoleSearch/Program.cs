@@ -1,15 +1,10 @@
-﻿using System;
-
-namespace ConsoleSearch
+﻿namespace ConsoleSearch;
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            // new App().Run();
-            var app = new App();
-            app.RunAsync().GetAwaiter().GetResult();
-
-        }
+        // new App().Run();
+        var app = new App();
+        app.RunAsync().GetAwaiter().GetResult();
     }
 }

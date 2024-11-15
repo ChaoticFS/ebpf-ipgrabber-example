@@ -10,7 +10,7 @@ namespace ConsoleSearch
     public class App
     {
         private static readonly HttpClient client = new HttpClient();
-        private Config _config = new Config();
+        private ConfigModel _config = new ConfigModel();
 
         public App()
         {
@@ -26,16 +26,18 @@ namespace ConsoleSearch
             {
                 Console.WriteLine("Enter search terms - 'q' to quit: - 'cs' to toggle case sensitivity");
                 string input = Console.ReadLine();
-                
-                if (input.Equals("q", StringComparison.OrdinalIgnoreCase)) break;
+
+                if (input.Equals("q", StringComparison.OrdinalIgnoreCase)) 
+                {
+                    break;
+                }
+
                 if (input.Equals("cs"))
                 {
                     _config.CaseSensitive = !_config.CaseSensitive;  
                     Console.WriteLine("Case sensitivity is now " + (_config.CaseSensitive ? "ON" : "OFF"));
                     continue;
                 }
-                
-                
 
                 var query = input.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 var queryString = string.Join(",", query);

@@ -1,37 +1,39 @@
-﻿using System;
-using Shared;
+﻿using Microsoft.Extensions.Configuration;
 
-namespace Renamer
-{
-	public class App
+namespace Renamer;
+public class App
 	{
-		public void Run() {
+    private IConfiguration _configuration;
+    private Crawler _crawler;
+    public int CountFiles { get; private set; }
 
-            Crawler renamer = new Crawler();
-            renamer.Crawl(new DirectoryInfo(Paths.FOLDER), RenameFile);
-            Console.WriteLine("Done with");
-            Console.WriteLine("Folders: " + renamer.CountFolders);
-            Console.WriteLine("Files:   " + CountFiles);
-        }
+    public App(IConfiguration configuration, Crawler crawler)
+    {
+        _configuration = configuration;
+        _crawler = crawler;
+    }
 
-        void RenameFile(FileInfo f)
-        {
-            Console.WriteLine($"Behandler {f.FullName}");
+    public void Run() 
+    {
+        _crawler.Crawl(new DirectoryInfo(_configuration["Database:Folder"]), RenameFile);
+        Console.WriteLine("Done with");
+        Console.WriteLine("Folders: " + _crawler.CountFolders);
+        Console.WriteLine("Files:   " + CountFiles);
+    }
 
-            if (f.FullName.EndsWith(".txt")) return;
+    void RenameFile(FileInfo f)
+    {
+        Console.WriteLine($"Behandler {f.FullName}");
 
-            if (f.Name.StartsWith('.')) return;
+        if (f.FullName.EndsWith(".txt")) return;
+
+        if (f.Name.StartsWith('.')) return;
 
 
+        var ending = f.FullName.EndsWith(".") ? "txt" : ".txt";
 
-            var ending = f.FullName.EndsWith(".") ? "txt" : ".txt";
+        File.Move(f.FullName, f.FullName + ending, true);
 
-            File.Move(f.FullName, f.FullName + ending, true);
-
-            CountFiles++;
-        }
-
-        public int CountFiles { get; private set; }
+        CountFiles++;
     }
 }
-

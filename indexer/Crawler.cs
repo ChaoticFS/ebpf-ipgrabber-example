@@ -18,9 +18,12 @@ namespace Indexer
         private int documentCounter = 0;
         /* Will count the number of documents indexed during indexing */
 
-        IDatabase mdatabase;
+        IDatabase _db;
 
-        public Crawler(IDatabase db){ mdatabase = db; }
+        public Crawler(IDatabase db)
+        { 
+            _db = db; 
+        }
 
         //Return a dictionary containing all words (as the key)in the file
         // [f] and the value is the number of occurrences of the key in file.
@@ -68,7 +71,7 @@ namespace Indexer
                         mCreationTime = file.CreationTime.ToString()
                     };
                     
-                    mdatabase.InsertDocument(newDoc);
+                    _db.InsertDocument(newDoc);
                     Dictionary<string, int> newWords = new Dictionary<string, int>();
                     ISet<string> wordsInFile = ExtractWordsInFile(file);
                     foreach (var aWord in wordsInFile) {
@@ -77,9 +80,9 @@ namespace Indexer
                             newWords.Add(aWord, words[aWord]);
                         }
                     }
-                    mdatabase.InsertAllWords(newWords);
+                    _db.InsertAllWords(newWords);
 
-                    mdatabase.InsertAllOcc(newDoc.mId, GetWordIdFromWords(wordsInFile));
+                    _db.InsertAllOcc(newDoc.mId, GetWordIdFromWords(wordsInFile));
 
 
                 }

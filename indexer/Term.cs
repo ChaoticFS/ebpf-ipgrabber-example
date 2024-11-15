@@ -1,10 +1,7 @@
-using System;
-namespace Indexer
+namespace Indexer;
+public class Term
 {
-    public class Term
-    {
-        public int Id { get; set; }
-        public string Value { get; set; }
-        public int Count { get; set; }
-    }
+    public int Id { get; set; }
+    public string Value { get; set; }
+    public int Count { get; set; }
 }

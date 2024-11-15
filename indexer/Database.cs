@@ -1,22 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Shared.Model;
-using Shared;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 
 namespace Indexer
 {
     public class Database : IDatabase
     {
         private SqliteConnection _connection;
-        public Database()
+        private IConfiguration _configuration;
+
+        public Database(IConfiguration configuration)
         {
+            _configuration = configuration;
 
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
 
             connectionStringBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
 
-            connectionStringBuilder.DataSource = Paths.DATABASE;
+            connectionStringBuilder.DataSource = _configuration["Database:Path"];
 
 
             _connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
