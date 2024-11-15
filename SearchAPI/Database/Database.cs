@@ -85,7 +85,11 @@ public class Database : IDatabase
                 }
             }
 
-            Console.WriteLine(duplicates + " duplicate words skipped");
+            if (duplicates > 0)
+            {
+                Console.WriteLine(duplicates + " duplicate words skipped");
+                Console.WriteLine("This only shows up if you ran the indexer more than once, double check things");
+            }
         }
         return res;
     }
