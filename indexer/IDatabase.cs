@@ -20,8 +20,7 @@ namespace Indexer
 
         void InsertAllOcc(int docId, ISet<int> wordIds);
         
-        // Get all words with key as the value, and the value as the
-        //count of each 
+        // Get all words with key as the value, and the value as the count of each 
         List<Term> GetAllWordCounts();
         
         // Get document details by document id

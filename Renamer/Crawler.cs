@@ -1,27 +1,26 @@
-﻿using System;
-namespace Renamer
+﻿namespace Renamer;
+public class Crawler
 {
-    public class Crawler
+    private int countFolders;
+    public delegate void FileHandler(FileInfo f);
+
+    public void Crawl(DirectoryInfo dir, FileHandler aFileHandler)
     {
-        private int countFolders;
+        Console.WriteLine("Crawling " + dir.FullName);
 
-        public delegate void FileHandler(FileInfo f);
-
-
-        public void Crawl(DirectoryInfo dir, FileHandler aFileHandler)
+        foreach (var file in dir.EnumerateFiles())
         {
-            Console.WriteLine("Crawling " + dir.FullName);
-            
-            foreach (var file in dir.EnumerateFiles())
-                aFileHandler(file);
-
-            foreach (var d in dir.EnumerateDirectories())
-                Crawl(d, aFileHandler);
-
-            countFolders++;
+            aFileHandler(file);
         }
 
-        public int CountFolders => countFolders;
+        foreach (var d in dir.EnumerateDirectories())
+        {
+            Crawl(d, aFileHandler);
+        }
+
+        countFolders++;
     }
+
+    public int CountFolders => countFolders;
 }
 

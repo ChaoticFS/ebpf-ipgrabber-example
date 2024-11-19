@@ -2,29 +2,38 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 using Shared;
 
 namespace Indexer
 {
     public class App
     {
+        private IConfiguration _configuration;
+        private IDatabase _db;
+        private Crawler _crawler;
+
+        public App(IConfiguration configuration, IDatabase db, Crawler crawler)
+        {
+            _configuration = configuration;
+            _db = db;
+            _crawler = crawler;
+        }
+
         public void Run()
         {
-            IDatabase db = new Database();
-            Crawler crawler = new Crawler(db);
-
-            var root = new DirectoryInfo(Paths.FOLDER);
+            var root = new DirectoryInfo(_configuration["Database:Folder"]);
 
             DateTime start = DateTime.Now;
 
-            crawler.IndexFilesIn(root, new List<string> { ".txt" });
+            _crawler.IndexFilesIn(root, new List<string> { ".txt" });
 
             TimeSpan used = DateTime.Now - start;
             Console.WriteLine("DONE! used " + used.TotalMilliseconds);
 
-            var all = db.GetAllWordCounts();
+            var all = _db.GetAllWordCounts();
 
-            Console.WriteLine($"Indexed {db.GetDocumentCounts()} documents");
+            Console.WriteLine($"Indexed {_db.GetDocumentCounts()} documents");
             Console.WriteLine($"Number of different words: {all.Count}");
 
             // Ask user for many results they would like to see.
@@ -38,7 +47,7 @@ namespace Indexer
                 string output = $"<{p.Id},{p.Value}> forekommer {p.Count} gange";
                 if (includeTimestamp)
                 {
-                    var doc = db.GetDocumentById(p.Id);
+                    var doc = _db.GetDocumentById(p.Id);
                     output += $" (indekseret kl. {doc.mIdxTime})";
                 }
 
