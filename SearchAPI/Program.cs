@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost") // URL of your Blazor app
+        policy.AllowAnyOrigin() // This should be changed to a single port once we get k8s up and running
             .AllowAnyMethod()
             .AllowAnyHeader();
     });

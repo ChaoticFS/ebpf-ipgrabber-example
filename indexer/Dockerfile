@@ -2,11 +2,11 @@
 WORKDIR /app
 
 COPY . .
-RUN dotnet publish /app/indexer/WebSearch.csproj -o /app/publish
+RUN dotnet publish /app/indexer/indexer.csproj -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish ./
 
-ENTRYPOINT ["dotnet", "/app/WebSearch.dll"]
+ENTRYPOINT ["dotnet", "/app/indexer.dll"]
