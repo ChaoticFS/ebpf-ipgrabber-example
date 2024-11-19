@@ -36,7 +36,7 @@ jobs:
 
       - name: Downcase folder name
         run: |
-          echo "FOLDER=${matrix.folder,,}" >>${GITHUB_ENV}
+          echo "FOLDER=$(echo ${{ matrix.folder }} | tr '[:upper:]' '[:lower:]')" >>${GITHUB_ENV}
         
       - name: Build and Push Image
         uses: docker/build-push-action@v6
