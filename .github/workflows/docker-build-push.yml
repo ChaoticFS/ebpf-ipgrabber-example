@@ -35,7 +35,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Downcase folder name
-        run: echo "FOLDER=${{ matrix.folder }}" | tr '[:upper:]' '[:lower:]' >>${GITHUB_ENV}
+        run: |
+          echo "FOLDER=${matrix.folder,,}" >>${GITHUB_ENV}
         
       - name: Build and Push Image
         uses: docker/build-push-action@v6
