@@ -36,7 +36,7 @@ jobs:
 
       - name: Downcase folder name
         run: |
-          echo "folder_lower=${matrix.folder,,}" >>${GITHUB_ENV}
+          echo "FOLDER=${matrix.folder,,}" >>${GITHUB_ENV}
         
       - name: Build and Push Image
         uses: docker/build-push-action@v6
@@ -44,4 +44,4 @@ jobs:
           context: .
           file: ./${{ matrix.folder }}/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ folder_lower }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ ${FOLDER} }}:latest
