@@ -40,4 +40,4 @@ jobs:
           context: .
           file: ./${{ matrix.folder }}/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.folder.toLowerCase() }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/$(echo ${{ matrix.folder }} | toLowerCase):latest
