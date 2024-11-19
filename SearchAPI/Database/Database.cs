@@ -259,7 +259,7 @@ public class Database : IDatabase
     //     return synonyms;
     // }
 
-    public async Task<List<SynonymEntry>> GetSynonymsFromApi(string word)
+    public async Task<List<Synonym>> GetSynonymsFromApi(string word)
     {
         using (var httpClient = new HttpClient())
         {
@@ -270,7 +270,7 @@ public class Database : IDatabase
             if (response.IsSuccessStatusCode)
             {
                 var jsonResponse = await response.Content.ReadAsStringAsync();
-                var synonyms = JsonSerializer.Deserialize<List<SynonymEntry>>(jsonResponse);
+                var synonyms = JsonSerializer.Deserialize<List<Synonym>>(jsonResponse);
                 return synonyms;
             }
             else

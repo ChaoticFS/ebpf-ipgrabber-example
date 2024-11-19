@@ -42,5 +42,5 @@ public interface IDatabase
     List<string> WordsFromIds(List<int> wordIds);
     
     // List<Synonym> GetSynonyms(string word);
-    Task<List<SynonymEntry>> GetSynonymsFromApi(string word);
+    Task<List<Synonym>> GetSynonymsFromApi(string word);
 }

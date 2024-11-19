@@ -1,6 +1,6 @@
 namespace Shared.Model;
-public class SynonymEntry
+public class Synonym
 {
-    public string Synonym { get; set; }
+    public string Text { get; set; }
     public double Weight { get; set; }
 }

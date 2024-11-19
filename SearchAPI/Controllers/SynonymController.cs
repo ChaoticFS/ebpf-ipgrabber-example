@@ -48,7 +48,7 @@ public class SynonymController : ControllerBase
             return Ok(new
             {
                 word = word,
-                synonyms = synonyms.Select(s => new { synonym = s.Synonym, weight = s.Weight })
+                synonyms = synonyms.Select(s => new { synonym = s.Text, weight = s.Weight })
             });
         }
         catch (Exception ex)
