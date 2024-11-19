@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searchapi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: searchapi
+  template:
+    metadata:
+      labels:
+        app: searchapi
+    spec:
+      containers:
+      - name: searchapi
+        image: magnusov/searchapi:latest
+        env:
+        - name: Database:Path
+        value: "app/data/seData copy/medium/searchDBMedium.db"
+        ports:
+        - containerPort: 5262
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app/data  # Path inside the container
+      volumes:
+      - name: sqlite-data
+        hostPath:
+          path: /seData  # Local path
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: searchapi-service
+spec:
+  selector:
+    app: searchapi
+  ports:
+    - protocol: TCP
+      port: 5262  # External port
+      targetPort: 5262  # Internal port
+  type: LoadBalancer
