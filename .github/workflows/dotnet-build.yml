@@ -1,0 +1,31 @@
+name: Build Projects
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build C# Projects
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        project:
+          - ConsoleSearch
+          - LoadBalancerAPI
+          - Renamer
+          - SearchAPI
+          - WebSearch
+          - indexer
+
+    steps: # stole this primarily from https://github.com/actions/setup-dotnet
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '7.0'
+    - run: dotnet build ./${{ matrix.project }}
