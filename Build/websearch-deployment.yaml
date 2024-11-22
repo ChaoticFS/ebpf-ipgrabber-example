@@ -15,6 +15,9 @@ spec:
       containers:
       - name: websearch
         image: magnusov/websearch:latest 
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"  
         ports:
         - containerPort: 80
 ---

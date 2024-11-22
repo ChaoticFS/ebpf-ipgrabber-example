@@ -52,7 +52,7 @@ private async Task SearchDocuments()
 {
 if (string.IsNullOrWhiteSpace(query)) return;
 
-var response = await Http.GetFromJsonAsync<SearchResponse>($"http://localhost:5262/api/Search?query={query}");
+var response = await Http.GetFromJsonAsync<SearchResponse>($"api/Search?query={query}");
 
 searchResults = response.Results;
 resultCount = response.Count;
