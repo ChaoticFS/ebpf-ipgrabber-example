@@ -12,6 +12,7 @@ class Program
             {
                 config.SetBasePath(Directory.GetCurrentDirectory());
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                config.AddEnvironmentVariables();
             })
             .ConfigureServices((context, services) =>
             {

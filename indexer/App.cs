@@ -22,6 +22,12 @@ namespace Indexer
 
         public void Run()
         {
+            if(_configuration["SKIP_PROCESSING"] == "true")
+            {
+                Console.WriteLine("Database configuration already done, skipping as instructed");
+                return;
+            }
+
             var root = new DirectoryInfo(_configuration["Database:Folder"]);
 
             DateTime start = DateTime.Now;

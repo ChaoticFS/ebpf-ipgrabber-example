@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: searchapi
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: searchapi
@@ -12,12 +12,32 @@ spec:
       labels:
         app: searchapi
     spec:
+      initContainers:
+      - name: renamer
+        image: magnusov/renamer:latest
+        envFrom:
+        - configMapRef:
+            name: config-values
+        ports:
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app/data
+      
+      - name: indexer
+        image: magnusov/indexer:latest 
+        envFrom:
+        - configMapRef:
+            name: config-values
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app/data
+
       containers:
       - name: searchapi
         image: magnusov/searchapi:latest
-        env:
-        - name: Database:Path
-        value: "app/data/seData copy/medium/searchDBMedium.db"
+        envFrom:
+        - configMapRef:
+            name: config-values
         ports:
         - containerPort: 5262
         volumeMounts:
@@ -26,7 +46,7 @@ spec:
       volumes:
       - name: sqlite-data
         hostPath:
-          path: /seData  # Local path
+          path: /mnt/data # Local path to data, run minikube mount "path/to/your/data:/mnt/data" to make it work
           type: Directory
 ---
 apiVersion: v1

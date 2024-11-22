@@ -13,8 +13,14 @@ public class App
         _crawler = crawler;
     }
 
-    public void Run() 
+    public void Run()
     {
+        if (_configuration["SKIP_PROCESSING"] == "true")
+        {
+            Console.WriteLine("Database configuration already done, skipping as instructed");
+            return;
+        }
+
         _crawler.Crawl(new DirectoryInfo(_configuration["Database:Folder"]), RenameFile);
         Console.WriteLine("Done with");
         Console.WriteLine("Folders: " + _crawler.CountFolders);
