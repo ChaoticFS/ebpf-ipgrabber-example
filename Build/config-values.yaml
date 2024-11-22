@@ -4,5 +4,5 @@ metadata:
   name: config-values
 data:
   SKIP_PROCESSING: "false"  # Whether to rename/index on database initialization, true = skip
-  DATABASE__PATH: "app/data/searchDBMedium.db"
-  DATABASE__FOLDER: "app/data/"
+  DATABASE__PATH: "data/searchDBMedium.db"
+  DATABASE__FOLDER: "data/"
