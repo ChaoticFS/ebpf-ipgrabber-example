@@ -38,3 +38,9 @@ minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data" # Will l
 kubectl apply -f Build/config-values.yaml
 
 kubectl apply -f Build/searchapi-deployment.yaml
+
+kubectl get pods
+
+kubectl port-forward <navn-på-searchapi-pod> 5262:5262
+
+kubectl apply -f Build/websearch-deployment.yaml
