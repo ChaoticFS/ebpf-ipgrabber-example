@@ -9,76 +9,99 @@
 
 @if (resultCount > 0)
 {
-<p>@resultCount dokumenter fundet:</p>
+    <p>@resultCount dokumenter fundet:</p>
 
-<button @onclick="ToggleSortById">Sortér efter ID @sortDirection</button>
+    <button @onclick="ToggleSortById">Sortér efter ID @sortDirectionID</button>
+    <button @onclick="ToggleSortByCount">Sortér efter Antal @sortDirectionID</button>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>URL</th>
-        <th>Indekseringstidspunkt</th>
-        <th>ID</th>
-        <th>Oprettelsestidspunkt</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var doc in searchResults)
-    {
-    <tr>
-        @* <td>@doc.mUrl</td> *@
-        <td>@doc.GetShortUrl()</td>
-        <td>@doc.mIdxTime</td>
-        <td>@doc.mId</td>
-        <td>@doc.mCreationTime</td>
-    </tr>
-    }
-    </tbody>
-</table>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Count</th>
+                <th>URL</th>
+                <th>Indekseringstidspunkt</th>
+                <th>ID</th>
+                <th>Oprettelsestidspunkt</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var doc in searchResults)
+            {
+                <tr>
+                    <td>@doc.Count</td>
+                    <td>@doc.GetShortUrl()</td>
+                    <td>@doc.IdxTime</td>
+                    <td>@doc.Id</td>
+                    <td>@doc.CreationTime</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 else
 {
-<p>Ingen resultater fundet</p>
+    <p>Ingen resultater fundet</p>
 }
 
 @code {
-private string query;
-private List<BEDocument> searchResults = new();
-private int resultCount;
-private bool sortAscending = true; // To toggle sorting direction
-private string sortDirection = "↑"; // Indicator for sorting direction
+    private string query;
+    private List<ResultDocument> searchResults = new();
+    private int resultCount;
+    private bool sortAscendingID = true; // To toggle sorting direction
+    private bool sortAscendingCount = false;
+    private string sortDirectionID = "↑"; // Indicator for sorting direction
+    private string sortDirectionCount = "↑";
 
-private async Task SearchDocuments()
-{
-if (string.IsNullOrWhiteSpace(query)) return;
+    private async Task SearchDocuments()
+    {
+        if (string.IsNullOrWhiteSpace(query)) return;
 
-var response = await Http.GetFromJsonAsync<SearchResponse>($"api/Search?query={query}");
+        var response = await Http.GetFromJsonAsync<SearchResponse>($"api/Search?query={query}");
 
-searchResults = response.Results;
-resultCount = response.Count;
-}
+        searchResults = response.Results;
+        resultCount = response.Count;
+    }
 
-//################################### Toggle and sort by ID
-private void ToggleSortById()
-{
-if (sortAscending)
-{
-searchResults = searchResults.OrderBy(doc => doc.mId).ToList();
-sortDirection = "↑";
-}
-else
-{
-searchResults = searchResults.OrderByDescending(doc => doc.mId).ToList();
-sortDirection = "↓";
-}
+    //################################### Toggle and sort by ID
+    private void ToggleSortById()
+    {
+        if (sortAscendingID)
+        {
+            searchResults = searchResults.OrderBy(doc => doc.Id).ToList();
+            sortDirectionID = "↑";
+        }
+        else
+        {
+            searchResults = searchResults.OrderByDescending(doc => doc.Id).ToList();
+            sortDirectionID = "↓";
+        }
 
-sortAscending = !sortAscending; // Toggle for next click
-}
-//################################### Toggle and sort by ID
+        sortAscendingID = !sortAscendingID; // Toggle for next click
+    }
+    //################################### Toggle and sort by ID
+
+
+    //################################### Toggle and sort by Count
+    private void ToggleSortByCount()
+    {
+        if (sortAscendingCount)
+        {
+            searchResults = searchResults.OrderBy(doc => doc.Count).ToList();
+            sortDirectionCount = "↑";
+        }
+        else
+        {
+            searchResults = searchResults.OrderByDescending(doc => doc.Count).ToList();
+            sortDirectionCount = "↓";
+        }
+
+        sortAscendingCount = !sortAscendingCount; // Toggle for next click
+    }
+    //################################### Toggle and sort by ID
 
     public class SearchResponse
     {
-    public List<BEDocument> Results { get; set; }
-    public int Count { get; set; }
+        public List<ResultDocument> Results { get; set; }
+        public int Count { get; set; }
     }
 }
