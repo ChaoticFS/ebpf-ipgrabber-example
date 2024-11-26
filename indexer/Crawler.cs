@@ -26,28 +26,31 @@ namespace Indexer
         }
 
         //Return a dictionary containing all words (as the key)in the file
-        // [f] and the value is the number of occurrences of the key in file.
-        private ISet<string> ExtractWordsInFile(FileInfo f)
+        // [f] and the value is the number of ocurrences of the key in file.
+        private Dictionary<string, int> ExtractWordsInFile(FileInfo f)
         {
-            ISet<string> res = new HashSet<string>();
+            Dictionary<string, int> res = new Dictionary<string, int>();
             var content = File.ReadAllLines(f.FullName);
             foreach (var line in content)
             {
                 foreach (var aWord in line.Split(separators, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    res.Add(aWord);
+                    if (!res.ContainsKey(aWord))
+                        res[aWord] = 0;
+
+                    res[aWord]++;
                 }
             }
-
             return res;
         }
 
-        private ISet<int> GetWordIdFromWords(ISet<string> src) {
-            ISet<int> res = new HashSet<int>();
+        private Dictionary<int, int> GetWordIdFromWords(Dictionary<string, int> src) 
+        {
+            Dictionary<int, int> res = new Dictionary<int, int>();
 
             foreach ( var p in src)
             {
-                res.Add(words[p]);
+                res.Add(words[p.Key], p.Value);
             }
             return res;
         }
@@ -55,7 +58,7 @@ namespace Indexer
         // Return a dictionary of all the words (the key) in the files contained
         // in the directory [dir]. Only files with an extension in
         // [extensions] is read. The value part of the return value is
-        // the number of occurrences of the key.
+        // the number of ocurrences of the key.
         public void IndexFilesIn(DirectoryInfo dir, List<string> extensions) {
             
             Console.WriteLine($"Crawling {dir.FullName}");
@@ -73,8 +76,8 @@ namespace Indexer
                     
                     _db.InsertDocument(newDoc);
                     Dictionary<string, int> newWords = new Dictionary<string, int>();
-                    ISet<string> wordsInFile = ExtractWordsInFile(file);
-                    foreach (var aWord in wordsInFile) {
+                    Dictionary<string, int> wordsInFile = ExtractWordsInFile(file);
+                    foreach (var aWord in wordsInFile.Keys) {
                         if (!words.ContainsKey(aWord)) {
                             words.Add(aWord, words.Count + 1);
                             newWords.Add(aWord, words[aWord]);

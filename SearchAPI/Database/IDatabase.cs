@@ -19,7 +19,7 @@ public interface IDatabase
 
     List<int> GetWordIds(string[] query, out List<string> outIgnored);
     
-    List<BEDocument> GetDocDetails(List<int> docIds);
+    List<ResultDocument> GetDocDetails(Dictionary<int, int> docIdOcc);
 
     /// <summary>
     /// Perform the essential search for documents. It will return
@@ -27,7 +27,7 @@ public interface IDatabase
     /// document, and value is the number of words from the query
     /// contained in the document.
     /// </summary>
-    List<KeyValuePair<int, int>> GetDocuments(List<int> wordIds);
+    Dictionary<int, int> GetDocuments(List<int> wordIds);
 
     /// <summary>
     /// Return all id of words, contained in [wordIds], bnut not

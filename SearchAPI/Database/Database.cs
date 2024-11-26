@@ -28,9 +28,9 @@ public class Database : IDatabase
     private string AsString(List<int> x) => $"({string.Join(',', x)})";
 
     // key is the id of the document, the value is number of search words in the document
-    public List<KeyValuePair<int, int>> GetDocuments(List<int> wordIds)
+    public Dictionary<int, int> GetDocuments(List<int> wordIds)
     {
-        var res = new List<KeyValuePair<int, int>>();
+        var res = new Dictionary<int, int>();
 
         /* Example sql statement looking for doc id's that
            contain words with id 2 and 3
@@ -42,9 +42,10 @@ public class Database : IDatabase
          ORDER BY COUNT(wordId) DESC 
          */
 
-        var sql = "SELECT docId, COUNT(wordId) as count FROM Occ where ";
+        var sql = "SELECT docId, ocurrences as count FROM Occ where ";
         sql += "wordId in " + AsString(wordIds) + " GROUP BY docId ";
         sql += "ORDER BY count DESC;";
+
 
         var selectCmd = _connection.CreateCommand();
         selectCmd.CommandText = sql;
@@ -56,7 +57,7 @@ public class Database : IDatabase
                 var docId = reader.GetInt32(0);
                 var count = reader.GetInt32(1);
 
-                res.Add(new KeyValuePair<int, int>(docId, count));
+                res.Add(docId, count);
             }
         }
 
@@ -94,12 +95,12 @@ public class Database : IDatabase
         return res;
     }
 
-    public List<BEDocument> GetDocDetails(List<int> docIds)
+    public List<ResultDocument> GetDocDetails(Dictionary<int, int> docIdOcc)
     {
-        List<BEDocument> res = new List<BEDocument>();
+        List<ResultDocument> res = new List<ResultDocument>();
 
         var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = "SELECT * FROM document where id in " + AsString(docIds);
+        selectCmd.CommandText = "SELECT * FROM document where id in " + AsString(docIdOcc.Keys.ToList());
 
         using (var reader = selectCmd.ExecuteReader())
         {
@@ -110,7 +111,7 @@ public class Database : IDatabase
                 var idxTime = reader.GetString(2);
                 var creationTime = reader.GetString(3);
 
-                res.Add(new BEDocument { mId = id, mUrl = url, mIdxTime = idxTime, mCreationTime = creationTime });
+                res.Add(new ResultDocument { Id = id, Url = url, IdxTime = idxTime, CreationTime = creationTime, Count = docIdOcc[id] });
             }
         }
         return res;

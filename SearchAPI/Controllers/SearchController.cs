@@ -28,19 +28,9 @@ public class SearchController : ControllerBase
         var wordIds = _database.GetWordIds(searchTerms, out var ignoredWords);
 
         // Fetch documents containing the search terms
-        var docIds = _database.GetDocuments(wordIds)
-            .Select(kvp => kvp.Key)
-            .ToList();
+        var docIdOcc = _database.GetDocuments(wordIds);
 
-        var documents = _database.GetDocDetails(docIds);
-
-        var result = documents.Select(document => new BEDocument
-        {
-            mUrl = document.mUrl,
-            mIdxTime = document.mIdxTime,
-            mId = document.mId,
-            mCreationTime = document.mCreationTime
-        }).ToList();
+        var result = _database.GetDocDetails(docIdOcc);
 
         return Ok(new
         {

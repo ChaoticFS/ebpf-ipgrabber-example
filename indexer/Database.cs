@@ -33,7 +33,7 @@ namespace Indexer
             Execute("DROP TABLE IF EXISTS word");
             Execute("CREATE TABLE word(id INTEGER PRIMARY KEY, name VARCHAR(50))");
 
-            Execute("CREATE TABLE Occ(wordId INTEGER, docId INTEGER, "
+            Execute("CREATE TABLE Occ(wordId INTEGER, docId INTEGER, ocurrences INTEGER, "
                   + "FOREIGN KEY (wordId) REFERENCES word(id), "
                   + "FOREIGN KEY (docId) REFERENCES document(id))");
             Execute("CREATE INDEX word_index ON Occ (wordId)");
@@ -75,12 +75,12 @@ namespace Indexer
             }
         }
 
-        public void InsertAllOcc(int docId, ISet<int> wordIds){
+        public void InsertAllOcc(int docId, Dictionary<int, int> wordIds){
             using (var transaction = _connection.BeginTransaction())
             {
                 var command = _connection.CreateCommand();
                 command.CommandText =
-                @"INSERT INTO occ(wordId, docId) VALUES(@wordId,@docId)";
+                @"INSERT INTO Occ(wordId, docId, ocurrences) VALUES(@wordId,@docId,@ocurrences)";
 
                 var paramwordId = command.CreateParameter();
                 paramwordId.ParameterName = "wordId";
@@ -93,9 +93,15 @@ namespace Indexer
 
                 command.Parameters.Add(paramDocId);
 
+                var paramocurrences = command.CreateParameter();
+                paramocurrences.ParameterName = "ocurrences";
+
+                command.Parameters.Add(paramocurrences);
+
                 foreach (var p in wordIds)
                 {
-                    paramwordId.Value = p;
+                    paramwordId.Value = p.Key;
+                    paramocurrences.Value = p.Value;
 
                     command.ExecuteNonQuery();
                 }
