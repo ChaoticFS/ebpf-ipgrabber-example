@@ -26,17 +26,25 @@ namespace Indexer
             _connection.Open();
 
             Execute("DROP TABLE IF EXISTS Occ");
-
+            Execute("DROP TABLE IF EXISTS Word_Synonym");
+            Execute("DROP TABLE IF EXISTS Synonym");
+            Execute("DROP TABLE IF EXISTS word");
             Execute("DROP TABLE IF EXISTS document");
+
             Execute("CREATE TABLE document(id INTEGER PRIMARY KEY, url TEXT, idxTime TEXT, creationTime TEXT)");
 
-            Execute("DROP TABLE IF EXISTS word");
             Execute("CREATE TABLE word(id INTEGER PRIMARY KEY, name VARCHAR(50))");
 
             Execute("CREATE TABLE Occ(wordId INTEGER, docId INTEGER, ocurrences INTEGER, "
                   + "FOREIGN KEY (wordId) REFERENCES word(id), "
                   + "FOREIGN KEY (docId) REFERENCES document(id))");
             Execute("CREATE INDEX word_index ON Occ (wordId)");
+
+            Execute("CREATE TABLE Synonym(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(50))");
+
+            Execute("CREATE TABLE Word_Synonym(wordId INTEGER, synonymId INTEGER, " 
+                  + "FOREIGN KEY (wordId) REFERENCES word(id), " 
+                  + "FOREIGN KEY (synonymId) REFERENCES Synonym(id))");
         }
 
         private void Execute(string sql)

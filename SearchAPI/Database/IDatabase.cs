@@ -1,4 +1,5 @@
-﻿using Shared.Model;
+﻿using Microsoft.AspNetCore.Mvc;
+using Shared.Model;
 
 namespace SearchAPI.Database;
 public interface IDatabase
@@ -41,6 +42,10 @@ public interface IDatabase
     /// </summary>
     List<string> WordsFromIds(List<int> wordIds);
     
-    // List<Synonym> GetSynonyms(string word);
-    Task<List<Synonym>> GetSynonymsFromApi(string word);
+    List<Synonym> GetSynonyms(string word);
+    void AddSynonym(string synonym);
+    void UpdateSynonym(Synonym synonym);
+    void DeleteSynonym(int synonymId);
+    void AddSynonymWord(int synonymId, int wordId);
+    void DeleteSynonymWord(int synonymId, int wordId);
 }

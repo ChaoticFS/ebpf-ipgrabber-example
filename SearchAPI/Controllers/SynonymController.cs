@@ -14,29 +14,10 @@ public class SynonymController : ControllerBase
     {
         _database = database;
     }
-    
-    // [HttpGet("synonyms")]
-    // public IActionResult GetSynonyms([FromQuery] string word)
-    // {
-    //     if (string.IsNullOrWhiteSpace(word))
-    //         return BadRequest("Word cannot be empty");
-    //
-    //     var synonyms = _database.GetSynonyms(word);
-    //
-    //     var result = new
-    //     {
-    //         word = word,
-    //         synonyms = synonyms
-    //     };
-    //
-    //     return Ok(result);
-    // }
-    
-    [HttpGet("synonyms")]
-    public async Task<IActionResult> GetSynonyms([FromQuery] string word)
-    {
-        // Should split this to a service so we can use it in other flows
 
+    [HttpGet("synonyms")]
+    public IActionResult GetSynonyms(string word)
+    {
         if (string.IsNullOrWhiteSpace(word))
         {
             return BadRequest("Word cannot be empty");
@@ -44,12 +25,104 @@ public class SynonymController : ControllerBase
 
         try
         {
-            var synonyms = await _database.GetSynonymsFromApi(word);
+            var synonyms = _database.GetSynonyms(word);
             return Ok(new
             {
                 word = word,
-                synonyms = synonyms.Select(s => new { synonym = s.Text, weight = s.Weight })
+                synonyms = synonyms.Select(s => new { id = s.Id, synonym = s.Name })
             });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("synonym")]
+    public IActionResult PostSynonym(string synonym)
+    {
+
+        // THIS NEEDS TO RETURN ID
+        if (synonym == null)
+        {
+            return BadRequest("Synonym cannot be empty");
+        }
+
+        try
+        {
+            _database.AddSynonym(synonym);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut("synonym")]
+    public IActionResult PutSynonym(Synonym synonym)
+    {
+        if (synonym == null)
+        {
+            return BadRequest("Synonym cannot be empty");
+        }
+
+        try
+        {
+            _database.UpdateSynonym(synonym);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpDelete("synonym")]
+    public IActionResult DeleteSynonym(int synonymId)
+    {
+        try
+        {
+            _database.DeleteSynonym(synonymId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("synonym/word")]
+    public IActionResult PostSynonymWord([FromQuery] int synonymId, int wordId)
+    {
+        if (synonymId == 0 || wordId == 0)
+        {
+            return BadRequest("Id cannot be 0");
+        }
+
+        try
+        {
+            _database.AddSynonymWord(synonymId, wordId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpDelete("synonym/word")]
+    public IActionResult DeleteSynonymWord([FromQuery] int synonymId, int wordId)
+    {
+        if (synonymId == 0 || wordId == 0)
+        {
+            return BadRequest("Id cannot be 0");
+        }
+
+        try
+        {
+            _database.DeleteSynonymWord(synonymId, wordId);
+            return Ok();
         }
         catch (Exception ex)
         {

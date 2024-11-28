@@ -16,7 +16,7 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult SearchDocuments([FromQuery] string query)
+    public IActionResult SearchDocuments(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
             return BadRequest("Query cannot be empty");
@@ -31,6 +31,26 @@ public class SearchController : ControllerBase
         var docIdOcc = _database.GetDocuments(wordIds);
 
         var result = _database.GetDocDetails(docIdOcc);
+
+        return Ok(new
+        {
+            Results = result,
+            Count = result.Count,
+            IgnoredWords = ignoredWords
+        });
+    }
+
+    [HttpGet("id")]
+    public IActionResult GetIdFromWords(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return BadRequest("Query cannot be empty");
+
+        // Split the query string into individual search terms
+        var searchTerms = query.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        // Get word IDs from search terms
+        var result = _database.GetWordIds(searchTerms, out var ignoredWords);
 
         return Ok(new
         {

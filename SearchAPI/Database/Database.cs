@@ -236,49 +236,147 @@ public class Database : IDatabase
         }
     }
 
-    //DOEST WORK
-    // public List<Synonym> GetSynonyms(string word)
-    // {
-    //     var synonyms = new List<Synonym>();
-    //
-    //     var selectCmd = _connection.CreateCommand();
-    //     selectCmd.CommandText = "SELECT synonym, weight FROM synonym WHERE word = @word";
-    //     selectCmd.Parameters.AddWithValue("@word", word);
-    //
-    //     using (var reader = selectCmd.ExecuteReader())
-    //     {
-    //         while (reader.Read())
-    //         {
-    //             synonyms.Add(new Synonym
-    //             {
-    //                 SynonymText = reader.GetString(0),
-    //                 Weight = reader.GetDouble(1)
-    //             });
-    //         }
-    //     }
-    //
-    //     return synonyms;
-    // }
-
-    public async Task<List<Synonym>> GetSynonymsFromApi(string word)
+    public List<Synonym> GetSynonyms(string word)
     {
-        using (var httpClient = new HttpClient())
-        {
-            var apiUrl = $"https://api.api-ninjas.com/v1/thesaurus?word={word}";
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", "YOUR_API_KEY");
+        var synonyms = new List<Synonym>();
 
-            var response = await httpClient.GetAsync(apiUrl);
-            if (response.IsSuccessStatusCode)
+        var selectCmd = _connection.CreateCommand();
+        selectCmd.CommandText = @"SELECT s.id, s.name AS Synonym
+                                  FROM Word_Synonym ws
+                                  JOIN word w ON ws.wordId = w.id
+                                  JOIN Synonym s ON ws.synonymId = s.id
+                                  WHERE w.name = @wordName;";
+        selectCmd.Parameters.AddWithValue("@wordName", word);
+
+        using (var reader = selectCmd.ExecuteReader())
+        {
+            while (reader.Read())
             {
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                var synonyms = JsonSerializer.Deserialize<List<Synonym>>(jsonResponse);
-                return synonyms;
+                synonyms.Add(new Synonym
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1)
+                });
             }
-            else
-            {
-                // Handle errors appropriately
-                throw new Exception("Error fetching synonyms from API");
-            }
+        }
+
+        return synonyms;
+    }
+
+    public void AddSynonym(string synonym)
+    {
+        using (var transaction = _connection.BeginTransaction())
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"INSERT INTO Synonym(name) 
+              VALUES(@name)";
+
+            var paramName = command.CreateParameter();
+            paramName.ParameterName = "name";
+            paramName.Value = synonym;
+            command.Parameters.Add(paramName);
+
+            command.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+    }
+
+    public void UpdateSynonym(Synonym synonym)
+    {
+        using (var transaction = _connection.BeginTransaction())
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"UPDATE Synonym 
+              SET name = @name
+              WHERE id = @id";
+
+            var paramName = command.CreateParameter();
+            paramName.ParameterName = "name";
+            paramName.Value = synonym.Name;
+            command.Parameters.Add(paramName);
+
+            var paramId = command.CreateParameter();
+            paramId.ParameterName = "id";
+            paramId.Value = synonym.Id;
+            command.Parameters.Add(paramId);
+
+            command.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+    }
+
+    public void DeleteSynonym(int synonymId) 
+    {
+        using (var transaction = _connection.BeginTransaction())
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"DELETE FROM Synonym 
+              WHERE id = @id";
+
+            var paramId = command.CreateParameter();
+            paramId.ParameterName = "id";
+            paramId.Value = synonymId;
+            command.Parameters.Add(paramId);
+
+            command.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+    }
+
+    public void AddSynonymWord(int synonymId, int wordId)
+    {
+        using (var transaction = _connection.BeginTransaction())
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"INSERT INTO Word_Synonym(wordId, synonymId) 
+              VALUES(@wordId, @synonymId)";
+
+            var paramWord = command.CreateParameter();
+            paramWord.ParameterName = "wordId";
+            paramWord.Value = wordId;
+            command.Parameters.Add(paramWord);
+
+            var paramSynonym = command.CreateParameter();
+            paramSynonym.ParameterName = "synonymId";
+            paramSynonym.Value = synonymId;
+            command.Parameters.Add(paramSynonym);
+
+            command.ExecuteNonQuery();
+
+            transaction.Commit();
+        }
+    }
+
+    public void DeleteSynonymWord(int synonymId, int wordId)
+    {
+        using (var transaction = _connection.BeginTransaction())
+        {
+            var command = _connection.CreateCommand();
+            command.CommandText =
+            @"DELETE FROM Word_Synonym 
+              WHERE wordId = @wordId 
+              AND synonymId = @synonymId";
+
+            var paramWord = command.CreateParameter();
+            paramWord.ParameterName = "wordId";
+            paramWord.Value = wordId;
+            command.Parameters.Add(paramWord);
+
+            var paramSynonym = command.CreateParameter();
+            paramSynonym.ParameterName = "synonymId";
+            paramSynonym.Value = synonymId;
+            command.Parameters.Add(paramSynonym);
+
+            command.ExecuteNonQuery();
+
+            transaction.Commit();
         }
     }
 }
