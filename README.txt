@@ -26,13 +26,15 @@ Deploying to kubernetes via kubectl, minikube and docker desktop
 
 These commands need to be run in order to deploy it to k8s
 
-cd "path/to/repo"
+Open Docker Desktop
 
 minikube start
 
 minikube dashboard # Will lock your terminal, start an extra
 
 minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data" # Will lock your terminal, start an extra
+
+cd "path/to/your/repo"
 
 # If you've already renamed/indexed go into the config-values.yaml and change the SKIP_PROCESSING var to true
 kubectl apply -f Build/config-values.yaml
