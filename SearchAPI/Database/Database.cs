@@ -263,25 +263,32 @@ public class Database : IDatabase
         return synonyms;
     }
 
-    public void AddSynonym(string synonym)
+    
+    public int AddSynonym(string synonym)
     {
         using (var transaction = _connection.BeginTransaction())
         {
             var command = _connection.CreateCommand();
             command.CommandText =
-            @"INSERT INTO Synonym(name) 
-              VALUES(@name)";
-
+                @"INSERT INTO Synonym(name) 
+          VALUES(@name);
+          SELECT last_insert_rowid();";
+                
+        
             var paramName = command.CreateParameter();
             paramName.ParameterName = "name";
             paramName.Value = synonym;
             command.Parameters.Add(paramName);
-
-            command.ExecuteNonQuery();
-
+            
+            var id = Convert.ToInt32(command.ExecuteScalar());
+                
             transaction.Commit();
+
+            return id;
         }
     }
+    
+    
 
     public void UpdateSynonym(Synonym synonym)
     {
@@ -378,5 +385,31 @@ public class Database : IDatabase
 
             transaction.Commit();
         }
+        
+        
     }
+    
+    public List<Synonym> GetAllSynonyms()
+    {
+        var synonyms = new List<Synonym>();
+
+        var selectCmd = _connection.CreateCommand();
+        selectCmd.CommandText = @"SELECT id, name FROM Synonym";
+
+        using (var reader = selectCmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                synonyms.Add(new Synonym
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1)
+                });
+            }
+        }
+
+        return synonyms;
+    }
+
+
 }

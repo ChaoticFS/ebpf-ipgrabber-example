@@ -37,27 +37,48 @@ public class SynonymController : ControllerBase
             return StatusCode(500, ex.Message);
         }
     }
-
-    [HttpPost("synonym")]
-    public IActionResult PostSynonym(string synonym)
+    
+    [HttpGet("synonyms/all")]
+    public IActionResult GetAllSynonyms()
     {
-
-        // THIS NEEDS TO RETURN ID
-        if (synonym == null)
-        {
-            return BadRequest("Synonym cannot be empty");
-        }
-
         try
         {
-            _database.AddSynonym(synonym);
-            return Ok();
+            var synonyms = _database.GetAllSynonyms();
+            return Ok(synonyms.Select(s => new 
+            { 
+                id = s.Id, 
+                name = s.Name 
+            }));
         }
         catch (Exception ex)
         {
             return StatusCode(500, ex.Message);
         }
     }
+
+    
+    [HttpPost("synonym")]
+    public IActionResult PostSynonym(string synonym)
+    {
+        if (string.IsNullOrWhiteSpace(synonym))
+        {
+            return BadRequest("Synonym cannot be empty");
+        }
+
+        try
+        {
+            var id = _database.AddSynonym(synonym);
+            return Ok(new { id });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    
+    
+    
 
     [HttpPut("synonym")]
     public IActionResult PutSynonym(Synonym synonym)
