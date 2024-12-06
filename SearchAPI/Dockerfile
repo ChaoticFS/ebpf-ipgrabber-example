@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /app
 
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN dotnet clean
 RUN dotnet publish /app/SearchAPI/SearchAPI.csproj -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 EXPOSE 5262
 
 ENV ASPNETCORE_URLS=http://+:5262
