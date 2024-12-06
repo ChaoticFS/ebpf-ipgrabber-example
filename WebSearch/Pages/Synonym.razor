@@ -1,0 +1,74 @@
+@page "/synonym"
+@using global::Shared.Model
+@inject HttpClient Http
+
+<h3>Søg efter synonymer</h3>
+
+<div>
+    <button @onclick="GetAllSynonyms">Hent alle synonymer</button>
+</div>
+
+@if (loading)
+{
+    <p>Henter synonymer...</p>
+}
+
+@if (errorMessage != null)
+{
+    <p style="color:red">@errorMessage</p>
+}
+
+@if (synonyms != null && synonyms.Any())
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Synonym</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var response in synonyms)
+        {
+            <tr>
+                <td>@response.Id</td>
+                <td>@response.Name</td>
+
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else if (!loading && synonyms != null)
+{
+    <p>Ingen synonymer fundet.</p>
+}
+
+@code {
+    private List<Synonym>? synonyms = null;
+    private bool loading = false;
+    private string? errorMessage = null;
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    private async Task GetAllSynonyms()
+    {
+        loading = true;
+        errorMessage = null;
+        synonyms = null;
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<Synonym>>("api/synonyms/all");
+            synonyms = response;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Kunne ikke hente synonymer: " + ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
