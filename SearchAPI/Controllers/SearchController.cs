@@ -52,11 +52,26 @@ public class SearchController : ControllerBase
         // Get word IDs from search terms
         var result = _database.GetWordIds(searchTerms, out var ignoredWords);
 
+
+        //Synonym integration 
+        //Fetch synonyms for each search term
+        var synonymIds = new List<int>();
+        foreach (var term in searchTerms)
+        {
+            var synonyms = _database.GetSynonyms(term);
+            synonymIds.AddRange(synonyms.Select(s => s.Id));
+        }
+        
+        //Combine word IDs and synonym IDs, ensuring no duplicates
+        var allIds = result.Concat(synonymIds).Distinct().ToList();
+        
+        
         return Ok(new
         {
-            Results = result,
+            Results = allIds,
             Count = result.Count,
             IgnoredWords = ignoredWords
         });
+        
     }
 }
