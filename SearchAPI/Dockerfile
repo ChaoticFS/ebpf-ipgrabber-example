@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN dotnet clean
-RUN dotnet publish /app/SearchAPI/SearchAPI.csproj -o /app/publish -a $TARGETARCH
+RUN dotnet publish /app/SearchAPI/SearchAPI.csproj -o /app/publish
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 EXPOSE 5262

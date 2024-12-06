@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN dotnet clean
-RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish -a $TARGETARCH
+RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish
 
 FROM nginx:alpine AS runtime
 WORKDIR /usr/share/nginx/html
