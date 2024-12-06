@@ -1,12 +1,12 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /app
 
 COPY . .
 
 RUN dotnet clean
-RUN dotnet publish /app/ConsoleSearch/ConsoleSearch.csproj -o /app/publish
+RUN dotnet publish /app/ConsoleSearch/ConsoleSearch.csproj -o /app/publish -a $TARGETARCH
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish ./

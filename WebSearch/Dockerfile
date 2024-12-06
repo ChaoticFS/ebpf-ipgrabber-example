@@ -1,10 +1,10 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /app
 
 COPY . .
 
 RUN dotnet clean
-RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish
+RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish -a $TARGETARCH
 
 FROM nginx:alpine AS runtime
 WORKDIR /usr/share/nginx/html
