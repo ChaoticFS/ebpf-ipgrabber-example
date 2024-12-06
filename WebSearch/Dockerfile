@@ -2,6 +2,8 @@
 WORKDIR /app
 
 COPY . .
+
+RUN dotnet clean
 RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish
 
 FROM nginx:alpine AS runtime

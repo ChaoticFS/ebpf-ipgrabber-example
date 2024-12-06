@@ -2,6 +2,8 @@
 WORKDIR /app
 
 COPY . .
+
+RUN dotnet clean
 RUN dotnet publish /app/ConsoleSearch/ConsoleSearch.csproj -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS runtime
