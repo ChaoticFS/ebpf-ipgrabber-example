@@ -1,11 +1,16 @@
 @page "/synonym"
-@using global::Shared.Model
 @inject HttpClient Http
 
 <h3>Søg efter synonymer</h3>
 
 <div>
     <button @onclick="GetAllSynonyms">Hent alle synonymer</button>
+</div>
+
+<h3>Søg efter et ord, for at se om det har synonymer</h3>
+<div>
+    <input type="text" @bind="searchWord" placeholder="Indtast et ord" />
+    <button @onclick="GetSynonyms">Søg</button>
 </div>
 
 @if (loading)
@@ -18,48 +23,60 @@
     <p style="color:red">@errorMessage</p>
 }
 
-@if (synonyms != null && synonyms.Any())
+@if (!loading && synonyms != null)
 {
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Synonym</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var response in synonyms)
-        {
-            <tr>
-                <td>@response.Id</td>
-                <td>@response.Name</td>
+    @if (isSearchMode && !string.IsNullOrWhiteSpace(searchWord))
+    {
+        <h4>Resultater for "@searchWord"</h4>
+    }
+    else
+    {
+        <h4>Alle synonymer</h4>
+    }
 
-            </tr>
-        }
-        </tbody>
-    </table>
-}
-else if (!loading && synonyms != null)
-{
-    <p>Ingen synonymer fundet.</p>
+    @if (synonyms.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Synonym</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var synonym in synonyms)
+                {
+                    <tr>
+                        <td>@synonym.Id</td>
+                        <td>@synonym.Name</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Ingen synonymer fundet.</p>
+    }
 }
 
 @code {
-    private List<Synonym>? synonyms = null;
+    private List<SynonymModel>? synonyms = null;
     private bool loading = false;
     private string? errorMessage = null;
-    public int Id { get; set; }
-    public string Name { get; set; }
+    private string searchWord = string.Empty;
+    private bool isSearchMode = false;
 
     private async Task GetAllSynonyms()
     {
         loading = true;
         errorMessage = null;
         synonyms = null;
+        isSearchMode = false;
 
         try
         {
-            var response = await Http.GetFromJsonAsync<List<Synonym>>("api/synonyms/all");
+            var response = await Http.GetFromJsonAsync<List<SynonymModel>>("api/synonyms/all");
             synonyms = response;
         }
         catch (Exception ex)
@@ -70,5 +87,62 @@ else if (!loading && synonyms != null)
         {
             loading = false;
         }
+    }
+
+    private async Task GetSynonyms()
+    {
+        if (string.IsNullOrWhiteSpace(searchWord))
+        {
+            errorMessage = "Indtast et ord for at søge.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        synonyms = null;
+        isSearchMode = true;
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<SynonymResponse>($"api/synonyms?word={searchWord}");
+
+            if (response?.Synonyms != null)
+            {
+                synonyms = response.Synonyms.Select(s => new SynonymModel
+                {
+                    Id = s.Id,
+                    Name = s.Synonym
+                }).ToList();
+            }
+            
+            synonyms ??= new List<SynonymModel>(); //Overvej if (synonyms == null) istedet??
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Kunne ikke hente synonymet: " + ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public class SynonymResponse
+    {
+        public string Word { get; set; }
+        public List<SynonymDetail> Synonyms { get; set; }
+    }
+
+    public class SynonymDetail
+    {
+        public int Id { get; set; }
+        public string Synonym { get; set; }
+    }
+
+    public class SynonymModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } 
     }
 }
