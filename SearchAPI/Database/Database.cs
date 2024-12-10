@@ -175,7 +175,21 @@ public class Database : IDatabase
         var res = new List<int>();
         var ignored = new List<string>();
 
-        foreach (var aWord in query)
+        var queryWordsWithSynonyms = new List<string>();
+
+        foreach (var word in query)
+        {
+            var synonyms = GetSynonyms(word);
+
+            foreach (var synonym in synonyms)
+            {
+                queryWordsWithSynonyms.Add(synonym.Name);
+            }
+
+            queryWordsWithSynonyms.Add(word);
+        }
+
+        foreach (var aWord in queryWordsWithSynonyms)
         {
             if (mWords.ContainsKey(aWord))
             {
@@ -198,9 +212,23 @@ public class Database : IDatabase
         var res = new List<int>();
         var ignored = new List<string>();
 
+        var queryWordsWithSynonyms = new List<string>();
+
+        foreach (var word in query)
+        {
+            var synonyms = GetSynonyms(word);
+
+            foreach (var synonym in synonyms)
+            {
+                queryWordsWithSynonyms.Add(synonym.Name);
+            }
+
+            queryWordsWithSynonyms.Add(word);
+        }
+
         if (caseSensitive)
         {
-            foreach (var aWord in query)
+            foreach (var aWord in queryWordsWithSynonyms)
             {
                 if (mWords.ContainsKey(aWord))
                     res.Add(mWords[aWord]);
@@ -212,7 +240,7 @@ public class Database : IDatabase
         }
         else
         {
-            foreach (string aWord in query)
+            foreach (string aWord in queryWordsWithSynonyms)
             {
                 bool found = false;
                 foreach (var word in mWords)
