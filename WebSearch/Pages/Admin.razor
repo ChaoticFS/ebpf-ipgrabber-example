@@ -1,0 +1,215 @@
+@page "/admin"
+@inject HttpClient Http
+
+<h3>Administrer Synonymer</h3>
+
+<div>
+    <h4>Tilføj nyt synonym</h4>
+    <input type="text" @bind="newSynonymName" placeholder="Synonym navn" />
+    <button @onclick="AddSynonym">Tilføj</button>
+</div>
+
+<div>
+    <h4>Opdater eksisterende synonym</h4>
+    <input type="number" @bind="updateSynonymId" placeholder="Synonym ID" />
+    <input type="text" @bind="updateSynonymName" placeholder="Nyt synonym navn" />
+    <button @onclick="UpdateSynonym">Opdater</button>
+</div>
+
+<div>
+    <h4>Slet synonym</h4>
+    <input type="number" @bind="deleteSynonymId" placeholder="Synonym ID" />
+    <button @onclick="DeleteSynonym">Slet</button>
+</div>
+
+<div>
+    <h4>Tilføj ord til synonym</h4>
+    <input type="number" @bind="addSynonymWordSynonymId" placeholder="Synonym ID" />
+    <input type="number" @bind="addSynonymWordWordId" placeholder="Ord ID" />
+    <button @onclick="AddSynonymWord">Tilføj ord</button>
+</div>
+
+@if (loading)
+{
+    <p>Arbejder...</p>
+}
+
+@if (errorMessage != null)
+{
+    <p style="color:red">@errorMessage</p>
+}
+
+@if (successMessage != null)
+{
+    <p style="color:green">@successMessage</p>
+}
+
+@code {
+    private bool loading = false;
+    private string? errorMessage = null;
+    private string? successMessage = null;
+
+    // Tilføj synonym
+    private string newSynonymName = string.Empty;
+
+    private async Task AddSynonym()
+    {
+        if (string.IsNullOrWhiteSpace(newSynonymName))
+        {
+            errorMessage = "Synonym navn kan ikke være tomt.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            // Send synonym som forespørgselsparameter
+            var response = await Http.PostAsync($"api/synonym?synonym={Uri.EscapeDataString(newSynonymName)}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Synonym blev tilføjet.";
+                newSynonymName = string.Empty;
+            }
+            else
+            {
+                errorMessage = $"Kunne ikke tilføje synonym. Statuskode: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fejl: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    
+    // Opdater synonym
+    private int updateSynonymId;
+    private string updateSynonymName = string.Empty;
+
+    private async Task UpdateSynonym()
+    {
+        if (updateSynonymId <= 0 || string.IsNullOrWhiteSpace(updateSynonymName))
+        {
+            errorMessage = "Synonym ID og navn er påkrævet.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/synonym", new SynonymModel { Id = updateSynonymId, Name = updateSynonymName });
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Synonym blev opdateret.";
+                updateSynonymId = 0;
+                updateSynonymName = string.Empty;
+            }
+            else
+            {
+                errorMessage = "Kunne ikke opdatere synonym.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fejl: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    // Slet synonym
+    private int deleteSynonymId;
+
+    private async Task DeleteSynonym()
+    {
+        if (deleteSynonymId <= 0)
+        {
+            errorMessage = "Synonym ID er påkrævet.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/synonym?synonymId={deleteSynonymId}");
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Synonym blev slettet.";
+                deleteSynonymId = 0;
+            }
+            else
+            {
+                errorMessage = "Kunne ikke slette synonym.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fejl: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    // Tilføj ord til synonym
+    private int addSynonymWordSynonymId;
+    private int addSynonymWordWordId;
+
+    private async Task AddSynonymWord()
+    {
+        if (addSynonymWordSynonymId <= 0 || addSynonymWordWordId <= 0)
+        {
+            errorMessage = "Både Synonym ID og Ord ID er påkrævet.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsync($"api/synonym/word?synonymId={addSynonymWordSynonymId}&wordId={addSynonymWordWordId}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Ord blev tilføjet til synonym.";
+                addSynonymWordSynonymId = 0;
+                addSynonymWordWordId = 0;
+            }
+            else
+            {
+                errorMessage = "Kunne ikke tilføje ord til synonym.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fejl: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public class SynonymModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}
