@@ -107,7 +107,7 @@ public class Database : IDatabase
 
         TimeSpan expiration = TimeSpan.FromMinutes(30);
         _cacheService.SetAsync("words", res, expiration);
-        Console.WriteLine("Cache miss for all getting all words");
+        Console.WriteLine("Cache miss for getting all words");
 
         return res;
     }

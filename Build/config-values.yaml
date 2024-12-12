@@ -6,3 +6,4 @@ data:
   SKIP_PROCESSING: "true"  # Whether to rename/index on database initialization, true = skip
   DATABASE__PATH: "data/searchDBMedium.db"
   DATABASE__FOLDER: "data/"
+  REDIS__CONNECTIONSTRING: "redis-service:6379"

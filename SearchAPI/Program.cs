@@ -13,10 +13,12 @@ var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 
 if (!string.IsNullOrEmpty(redisConnectionString))
 {
+    Console.Write("Initializing Redis Cache");
     builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 }
 else
 {
+    Console.WriteLine("Initializing In Memory Cache");
     builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
 }
 
