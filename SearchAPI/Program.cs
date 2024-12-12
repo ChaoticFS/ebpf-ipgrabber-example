@@ -1,5 +1,6 @@
 using Shared;
 using SearchAPI.Database;
+using SearchAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+}
+else
+{
+    builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
+}
 
 builder.Services.AddSingleton<IDatabase, Database>();
 builder.Services.AddSingleton<ConfigModel>();

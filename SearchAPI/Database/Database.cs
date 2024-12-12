@@ -1,14 +1,16 @@
 ﻿using Shared.Model;
 using Microsoft.Data.Sqlite;
 using System.Text.Json;
+using SearchAPI.Services;
 
 namespace SearchAPI.Database;
 public class Database : IDatabase
 {
     private IConfiguration _configuration;
     private SqliteConnection _connection;
+    private ICacheService _cacheService;
 
-    public Database(IConfiguration configuration)
+    public Database(IConfiguration configuration, ICacheService cacheService)
     {
         var connectionStringBuilder = new SqliteConnectionStringBuilder();
 
@@ -23,6 +25,8 @@ public class Database : IDatabase
         _connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
         _connection.Open();
+
+        _cacheService = cacheService;
     }
 
     private string AsString(List<int> x) => $"({string.Join(',', x)})";
@@ -66,6 +70,14 @@ public class Database : IDatabase
 
     private Dictionary<string, int> GetAllWords()
     {
+        var cachedResult = _cacheService.GetAsync<Dictionary<string, int>>("words").Result;
+
+        if (cachedResult != null)
+        {
+            Console.WriteLine("Cache hit for getting all words");
+            return cachedResult;
+        }
+
         Dictionary<string, int> res = new Dictionary<string, int>();
 
         var selectCmd = _connection.CreateCommand();
@@ -92,6 +104,11 @@ public class Database : IDatabase
                 Console.WriteLine("This only shows up if you ran the indexer more than once, double check things");
             }
         }
+
+        TimeSpan expiration = TimeSpan.FromMinutes(30);
+        _cacheService.SetAsync("words", res, expiration);
+        Console.WriteLine("Cache miss for all getting all words");
+
         return res;
     }
 
@@ -170,7 +187,7 @@ public class Database : IDatabase
 
     public List<int> GetWordIds(string[] query, out List<string> outIgnored)
     {
-        Dictionary<string, int> mWords = GetAllWords(); //Cache this as non case sensitive
+        Dictionary<string, int> mWords = GetAllWords();
 
         var res = new List<int>();
         var ignored = new List<string>();
@@ -207,7 +224,7 @@ public class Database : IDatabase
 
     public List<int> GetWordIds(string[] query, bool caseSensitive, out List<string> outIgnored)
     {
-        Dictionary<string, int> mWords = GetAllWords(); //Cache this as case sensitive
+        Dictionary<string, int> mWords = GetAllWords();
 
         var res = new List<int>();
         var ignored = new List<string>();
@@ -266,6 +283,14 @@ public class Database : IDatabase
 
     public List<Synonym> GetSynonyms(string word)
     {
+        var cachedResult = _cacheService.GetAsync<List<Synonym>>($"synonyms:{word}").Result;
+
+        if (cachedResult != null)
+        {
+            Console.WriteLine($"Cache hit for synonyms of word: {word}");
+            return cachedResult;
+        }
+
         var synonyms = new List<Synonym>();
 
         var selectCmd = _connection.CreateCommand();
@@ -287,6 +312,10 @@ public class Database : IDatabase
                 });
             }
         }
+
+        TimeSpan expiration = TimeSpan.FromMinutes(30);
+        _cacheService.SetAsync($"synonyms:{word}", synonyms, expiration);
+        Console.WriteLine($"Cache miss for synonyms of word: {word}");
 
         return synonyms;
     }
@@ -311,6 +340,8 @@ public class Database : IDatabase
             var id = Convert.ToInt32(command.ExecuteScalar());
                 
             transaction.Commit();
+
+            _cacheService.ClearAsync();
 
             return id;
         }
@@ -340,6 +371,8 @@ public class Database : IDatabase
 
             command.ExecuteNonQuery();
 
+            _cacheService.ClearAsync();
+
             transaction.Commit();
         }
     }
@@ -359,6 +392,8 @@ public class Database : IDatabase
             command.Parameters.Add(paramId);
 
             command.ExecuteNonQuery();
+
+            _cacheService.ClearAsync();
 
             transaction.Commit();
         }
@@ -384,6 +419,8 @@ public class Database : IDatabase
             command.Parameters.Add(paramSynonym);
 
             command.ExecuteNonQuery();
+
+            _cacheService.ClearAsync();
 
             transaction.Commit();
         }
@@ -411,14 +448,22 @@ public class Database : IDatabase
 
             command.ExecuteNonQuery();
 
+            _cacheService.ClearAsync();
+
             transaction.Commit();
         }
-        
-        
     }
     
     public List<Synonym> GetAllSynonyms()
     {
+        var cachedResult = _cacheService.GetAsync<List<Synonym>>("synonyms").Result;
+
+        if (cachedResult != null)
+        {
+            Console.WriteLine($"Cache hit for all synonyms");
+            return cachedResult;
+        }
+
         var synonyms = new List<Synonym>();
 
         var selectCmd = _connection.CreateCommand();
@@ -436,8 +481,10 @@ public class Database : IDatabase
             }
         }
 
+        TimeSpan expiration = TimeSpan.FromMinutes(30);
+        _cacheService.SetAsync($"synonyms", synonyms, expiration);
+        Console.WriteLine("Cache miss for all synonyms");
+
         return synonyms;
     }
-
-
 }
