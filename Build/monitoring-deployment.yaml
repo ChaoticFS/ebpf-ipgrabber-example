@@ -11,7 +11,7 @@ metadata:
   annotations:
     {}
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
 automountServiceAccountToken: true
 ---
 # Source: loki-stack/charts/promtail/templates/serviceaccount.yaml
@@ -19,7 +19,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: loki-promtail
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     helm.sh/chart: promtail-6.15.5
     app.kubernetes.io/name: promtail
@@ -32,7 +32,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -46,7 +46,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: loki-promtail
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     helm.sh/chart: promtail-6.15.5
     app.kubernetes.io/name: promtail
@@ -153,7 +153,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: loki-loki-stack
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki-stack
     chart: loki-stack-2.10.2
@@ -255,7 +255,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: loki-promtail
-    namespace: grafana-loki
+    namespace: "default"
 roleRef:
   kind: ClusterRole
   name: loki-promtail
@@ -266,7 +266,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -283,7 +283,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -302,7 +302,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: loki-headless
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -325,7 +325,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: loki-memberlist
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -349,7 +349,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
@@ -373,7 +373,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: loki-promtail
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     helm.sh/chart: promtail-6.15.5
     app.kubernetes.io/name: promtail
@@ -467,7 +467,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: loki
-  namespace: grafana-loki
+  namespace: "default"
   labels:
     app: loki
     chart: loki-2.16.0
