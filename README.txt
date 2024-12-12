@@ -49,4 +49,6 @@ kubectl port-forward <navn-på-searchapi-pod> 5262:5262
 
 kubectl apply -f Build/websearch-deployment.yaml
 
+kubectl apply -f Build/monitoring-deployment.yaml
+
 minikube service websearch-service
