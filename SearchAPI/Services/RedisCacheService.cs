@@ -7,9 +7,10 @@ public class RedisCacheService : ICacheService
     private readonly IDatabase _cache;
     private readonly IConfiguration _configuration;
 
-    public RedisCacheService()
+    public RedisCacheService(IConfiguration configuration)
     {
-        Console.WriteLine("Initializing redis cache for connection string: " + _configuration["Redis:ConnectionString"]);
+        _configuration = configuration;
+
         var options = ConfigurationOptions.Parse(_configuration["Redis:ConnectionString"]);
         ConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(options);
         _cache = connectionMultiplexer.GetDatabase();

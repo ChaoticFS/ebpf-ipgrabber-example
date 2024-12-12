@@ -36,6 +36,8 @@ minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data" # Will l
 
 cd "path/to/your/repo"
 
+helm upgrade --install --values monitoring-deployment.yaml loki grafana/loki-stack -n grafana-loki --create-namespace
+
 # If you've already renamed/indexed go into the config-values.yaml and change the SKIP_PROCESSING var to true
 kubectl apply -f Build/config-values.yaml
 
@@ -48,7 +50,5 @@ kubectl get pods
 kubectl port-forward <navn-på-searchapi-pod> 5262:5262
 
 kubectl apply -f Build/websearch-deployment.yaml
-
-kubectl apply -f Build/monitoring-deployment.yaml
 
 minikube service websearch-service
