@@ -2,15 +2,18 @@
 using Shared.Model;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 
 namespace Indexer
 {
-    public class Database : IDatabase
+    public class RqliteDatabase : IDatabase
     {
-        private SqliteConnection _connection;
+        private string _connection;
         private IConfiguration _configuration;
 
-        public Database(IConfiguration configuration)
+        public RqliteDatabase(IConfiguration configuration)
         {
             _configuration = configuration;
 
@@ -235,6 +238,27 @@ namespace Indexer
                 }
             }
             return -1;
+        }
+
+        private void Execute(string query)
+        {
+            var queryUrl = $"{_connection}/db/execute?pretty&timings";
+
+            var payload = JsonSerializer.Serialize(new[] { query });
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+            using var response = _httpClient.PostAsync(queryUrl, content).Result;
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = response.Content.ReadAsStringAsync().Result;
+            var parsedResponse = JsonSerializer.Deserialize<RqliteQueryResponse>(jsonResponse);
+
+            return parsedResponse?.Results[0]?.Values ?? new List<Dictionary<string, object>>();
+        }
+
+        private void Select(string query)
+        {
+            var queryUrl = $"{_connection}/db/query?pretty&timings";
         }
     }
 }

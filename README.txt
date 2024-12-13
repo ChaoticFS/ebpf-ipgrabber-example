@@ -38,6 +38,8 @@ cd "path/to/your/repo"
 
 helm upgrade --install --values Build/monitoring-deployment.yaml loki grafana/loki-stack -n grafana-loki --create-namespace
 
+helm upgrade --install --values Build/database-deployment.yaml rqlite rqlite/rqlite --create-namespace
+
 # If you've already renamed/indexed go into the config-values.yaml and change the SKIP_PROCESSING var to true
 kubectl apply -f Build/config-values.yaml
 

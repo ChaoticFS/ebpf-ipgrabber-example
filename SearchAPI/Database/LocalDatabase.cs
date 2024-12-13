@@ -4,13 +4,13 @@ using System.Text.Json;
 using SearchAPI.Services;
 
 namespace SearchAPI.Database;
-public class Database : IDatabase
+public class RqliteDatabase : IDatabase
 {
     private IConfiguration _configuration;
     private SqliteConnection _connection;
     private ICacheService _cacheService;
 
-    public Database(IConfiguration configuration, ICacheService cacheService)
+    public RqliteDatabase(IConfiguration configuration, ICacheService cacheService)
     {
         var connectionStringBuilder = new SqliteConnectionStringBuilder();
 

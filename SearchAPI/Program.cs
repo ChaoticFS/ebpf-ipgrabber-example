@@ -38,7 +38,19 @@ else
     builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
 }
 
-builder.Services.AddSingleton<IDatabase, Database>();
+var rqliteConnectionString = builder.Configuration["Database:ConnectionString"];
+
+if (!string.IsNullOrEmpty(rqliteConnectionString))
+{
+    Console.Write("Initializing Rqlite Database");
+    builder.Services.AddSingleton<IDatabase, RqliteDatabase>();
+}
+else
+{
+    Console.WriteLine("Initializing Local Database");
+    builder.Services.AddSingleton<IDatabase, LocalDatabase>();
+}
+
 builder.Services.AddSingleton<ConfigModel>();
 
 //  CORS-politik for at tillade anmodninger fra Blazor
