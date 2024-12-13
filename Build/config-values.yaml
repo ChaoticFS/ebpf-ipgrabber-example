@@ -7,3 +7,4 @@ data:
   DATABASE__PATH: "data/searchDBMedium.db"
   DATABASE__FOLDER: "data/"
   REDIS__CONNECTIONSTRING: "redis-service-redis-cluster:6379"
+  REDIS__PASSWORD: "NU1YMWhwSTBQcA=="

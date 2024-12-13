@@ -12,6 +12,7 @@ public class RedisCacheService : ICacheService
         _configuration = configuration;
 
         var options = ConfigurationOptions.Parse(_configuration["Redis:ConnectionString"]);
+        options.Password = _configuration["Redis:Password"];
         ConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(options);
         _cache = connectionMultiplexer.GetDatabase();
     }

@@ -2490,7 +2490,6 @@ spec:
       port: 6379
       targetPort: tcp-redis
       protocol: TCP
-      nodePort: null
   selector:
     app.kubernetes.io/instance: redis-service
     app.kubernetes.io/name: redis-cluster
@@ -2516,7 +2515,7 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: redis-service
       app.kubernetes.io/name: redis-cluster
-  replicas: 3
+  replicas: 6
   serviceName: redis-service-redis-cluster-headless
   podManagementPolicy: Parallel
   template:
@@ -2655,7 +2654,6 @@ spec:
               mountPath: /scripts
             - name: redis-data
               mountPath: /bitnami/redis/data
-              subPath: 
             - name: default-config
               mountPath: /opt/bitnami/redis/etc/redis-default.conf
               subPath: redis-default.conf
