@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rqlite-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: renamer
+        image: magnusov/renamer:latest
+        envFrom:
+        - configMapRef:
+            name: config-values
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app/data
+      
+      - name: indexer
+        image: magnusov/indexer:latest 
+        envFrom:
+        - configMapRef:
+            name: config-values
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 500m
+          limits:
+            memory: 1024Mi
+            cpu: 2000m
+      volumes:
+      - name: sqlite-data
+        hostPath:
+          path: /mnt/data
+          type: Directory
+      restartPolicy: Never

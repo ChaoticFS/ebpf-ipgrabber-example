@@ -1,1 +1,9 @@
 replicaCount: 3
+persistence:
+  enabled: true
+  storageClassName: null
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  labels:
+    app: rqlite

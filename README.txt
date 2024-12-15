@@ -17,9 +17,14 @@ helm upgrade --install --values Build/monitoring-deployment.yaml loki grafana/lo
 
 helm upgrade --install --values Build/database-deployment.yaml rqlite rqlite/rqlite --create-namespace
 
-# ONLY RUN THESE STEPS IF YOU WANT TO REINDEX DB
+# ONLY RUN THESE STEPS IF YOU WANT TO MESS WITH THE DB
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data"
+
+# if you want to migrate an existing sqlite file to rqlite:
+kubectl apply -f Build/database-migration.yaml
+
+# if you want to reindex (NOT RECOMMENDED, should do it locally):
 kubectl apply -f Build/database-initialization.yaml
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

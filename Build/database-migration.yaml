@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rqlite-load
+spec:
+  template:
+    spec:
+      containers:
+      - name: rqlite-loader
+        image: curlimages/curl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Loading database into rqlite";
+            curl -v -XPOST 'rqlite:80/db/load' \
+            -H "Content-type: application/octet-stream" \
+            --data-binary @/mnt/data/searchDBMedium.db;
+            echo "Database loaded successfully";
+        volumeMounts:
+        - name: sqlite-data
+          mountPath: /mnt/data
+      restartPolicy: Never
+      volumes:
+      - name: sqlite-data
+        hostPath:
+          path: /mnt/data
+          type: Directory
