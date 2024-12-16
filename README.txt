@@ -34,6 +34,8 @@ kubectl apply -f Build/cache-deployment.yaml
 
 kubectl apply -f Build/searchapi-deployment.yaml
 
+kubectl port-forward svc/searchapi-service 5262:5262
+
 kubectl apply -f Build/websearch-deployment.yaml
 
 minikube service websearch-service
