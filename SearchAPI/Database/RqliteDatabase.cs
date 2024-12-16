@@ -393,6 +393,8 @@ public class RqliteDatabase : IDatabase
     private async Task<int> ExecuteAndGetId(string sql)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
+        Console.WriteLine(payload); //delete this
+
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync("/db/execute", content);
@@ -410,6 +412,7 @@ public class RqliteDatabase : IDatabase
             return lastInsertId.GetInt32();
         }
 
+        Console.WriteLine($"success: {success}, insert_id: {responseJson}"); //delete this
         throw new Exception("Execute with id return did not return a last_insert_id");
     }
 }
