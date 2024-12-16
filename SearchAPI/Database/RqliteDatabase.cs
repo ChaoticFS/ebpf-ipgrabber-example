@@ -269,7 +269,7 @@ public class RqliteDatabase : IDatabase
 
         int id = ExecuteAndGetId(sqlInsert).Result;
 
-        _cacheService.ClearAsync();
+        _cacheService.ClearAsync().Wait();
 
         return id;
     }
@@ -282,7 +282,7 @@ public class RqliteDatabase : IDatabase
 
         Execute(sql);
         
-        _cacheService.ClearAsync();
+        _cacheService.ClearAsync().Wait();
     }
 
     public void DeleteSynonym(int synonymId) 
@@ -292,7 +292,7 @@ public class RqliteDatabase : IDatabase
 
         Execute(sql);
 
-        _cacheService.ClearAsync();
+        _cacheService.ClearAsync().Wait();
     }
 
     public void AddSynonymWord(int synonymId, int wordId)
@@ -302,7 +302,7 @@ public class RqliteDatabase : IDatabase
 
         Execute(sql);
 
-        _cacheService.ClearAsync();
+        _cacheService.ClearAsync().Wait();
     }
 
     public void DeleteSynonymWord(int synonymId, int wordId)
@@ -313,7 +313,7 @@ public class RqliteDatabase : IDatabase
 
         Execute(sql);
 
-        _cacheService.ClearAsync();
+        _cacheService.ClearAsync().Wait();
     }
     
     public List<Synonym> GetAllSynonyms()
