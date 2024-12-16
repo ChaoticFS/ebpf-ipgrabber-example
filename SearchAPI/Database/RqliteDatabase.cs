@@ -405,14 +405,13 @@ public class RqliteDatabase : IDatabase
         }
 
         var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var success = responseJson.RootElement.GetProperty("results")[0].TryGetProperty("values", out var result);
+        var result = responseJson.RootElement.GetProperty("results")[0];
 
-        if (success && result.TryGetProperty("last_insert_id", out var lastInsertId))
+        if (result.TryGetProperty("last_insert_id", out var lastInsertId))
         {
             return lastInsertId.GetInt32();
         }
 
-        Console.WriteLine($"success: {success}, insert_id: {responseJson}"); //delete this
         throw new Exception("Execute with id return did not return a last_insert_id");
     }
 }
