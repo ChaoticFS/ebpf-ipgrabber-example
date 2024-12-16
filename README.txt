@@ -34,10 +34,6 @@ kubectl apply -f Build/cache-deployment.yaml
 
 kubectl apply -f Build/searchapi-deployment.yaml
 
-kubectl get pods
-
-kubectl port-forward <navn-på-searchapi-pod> 5262:5262
-
 kubectl apply -f Build/websearch-deployment.yaml
 
 minikube service websearch-service
