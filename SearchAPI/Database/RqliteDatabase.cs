@@ -347,7 +347,6 @@ public class RqliteDatabase : IDatabase
     private void Execute(string sql)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
-        Console.WriteLine(payload); //delete this
 
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
@@ -364,7 +363,6 @@ public class RqliteDatabase : IDatabase
     private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
-        Console.WriteLine(payload); //delete this
 
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
@@ -393,7 +391,6 @@ public class RqliteDatabase : IDatabase
     private async Task<int> ExecuteAndGetId(string sql)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
-        Console.WriteLine(payload); //delete this
 
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 

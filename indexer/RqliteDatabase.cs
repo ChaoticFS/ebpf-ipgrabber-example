@@ -168,7 +168,6 @@ namespace Indexer
         private void Execute(string sql)
         {
             var payload = JsonSerializer.Serialize(new[] { sql });
-            Console.WriteLine(payload); //delete this
 
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
@@ -183,7 +182,6 @@ namespace Indexer
         private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
         {
             var payload = JsonSerializer.Serialize(new[] { sql });
-            Console.WriteLine(payload); //delete this
 
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
