@@ -362,6 +362,8 @@ public class RqliteDatabase : IDatabase
     private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
+        Console.WriteLine(payload);
+
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PostAsync("/query", content);
