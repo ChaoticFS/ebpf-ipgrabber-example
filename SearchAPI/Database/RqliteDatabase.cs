@@ -347,6 +347,8 @@ public class RqliteDatabase : IDatabase
     private void Execute(string sql)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
+        Console.WriteLine(payload); //delete this
+
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         using var response = _httpClient.PostAsync("/db/execute", content).Result;
@@ -374,12 +376,15 @@ public class RqliteDatabase : IDatabase
         }
 
         var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var rows = responseJson.RootElement.GetProperty("results")[0].GetProperty("values");
+        var success = responseJson.RootElement.GetProperty("results")[0].TryGetProperty("values", out var rows);
 
         var result = new List<T>();
-        foreach (var row in rows.EnumerateArray())
+        if (success)
         {
-            result.Add(mapFunc(row));
+            foreach (var row in rows.EnumerateArray())
+            {
+                result.Add(mapFunc(row));
+            }
         }
 
         return result;
@@ -398,9 +403,9 @@ public class RqliteDatabase : IDatabase
         }
 
         var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var result = responseJson.RootElement.GetProperty("results")[0];
+        var success = responseJson.RootElement.GetProperty("results")[0].TryGetProperty("values", out var result);
 
-        if (result.TryGetProperty("last_insert_id", out var lastInsertId))
+        if (success && result.TryGetProperty("last_insert_id", out var lastInsertId))
         {
             return lastInsertId.GetInt32();
         }

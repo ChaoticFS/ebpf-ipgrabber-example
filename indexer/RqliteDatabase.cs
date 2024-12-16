@@ -168,6 +168,8 @@ namespace Indexer
         private void Execute(string sql)
         {
             var payload = JsonSerializer.Serialize(new[] { sql });
+            Console.WriteLine(payload); //delete this
+
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
             using var response = _httpClient.PostAsync("/db/execute", content).Result;
@@ -181,22 +183,27 @@ namespace Indexer
         private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
         {
             var payload = JsonSerializer.Serialize(new[] { sql });
+            Console.WriteLine(payload); //delete this
+
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync("/db/query", content);
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Failed to execute query: {response.StatusCode} - {response.ReasonPhrase}");
+                throw new Exception($"Failed to execute query on {_httpClient.BaseAddress}/query: {response.StatusCode} - {response.ReasonPhrase}");
             }
 
             var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            var rows = responseJson.RootElement.GetProperty("results")[0].GetProperty("values");
+            var success = responseJson.RootElement.GetProperty("results")[0].TryGetProperty("values", out var rows);
 
             var result = new List<T>();
-            foreach (var row in rows.EnumerateArray())
+            if (success)
             {
-                result.Add(mapFunc(row));
+                foreach (var row in rows.EnumerateArray())
+                {
+                    result.Add(mapFunc(row));
+                }
             }
 
             return result;
