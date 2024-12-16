@@ -349,7 +349,7 @@ public class RqliteDatabase : IDatabase
         var payload = JsonSerializer.Serialize(new[] { sql });
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-        using var response = _httpClient.PostAsync("/execute", content).Result;
+        using var response = _httpClient.PostAsync("/db/execute", content).Result;
         response.EnsureSuccessStatusCode();
     }
 
@@ -362,11 +362,11 @@ public class RqliteDatabase : IDatabase
     private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
     {
         var payload = JsonSerializer.Serialize(new[] { sql });
-        Console.WriteLine(payload);
+        Console.WriteLine(payload); //delete this
 
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/query", content);
+        var response = await _httpClient.PostAsync("/db/query", content);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -390,7 +390,7 @@ public class RqliteDatabase : IDatabase
         var payload = JsonSerializer.Serialize(new[] { sql });
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/execute", content);
+        var response = await _httpClient.PostAsync("/db/execute", content);
 
         if (!response.IsSuccessStatusCode)
         {

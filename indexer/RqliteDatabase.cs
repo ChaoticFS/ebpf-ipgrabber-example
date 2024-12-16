@@ -170,7 +170,7 @@ namespace Indexer
             var payload = JsonSerializer.Serialize(new[] { sql });
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            using var response = _httpClient.PostAsync("db/execute", content).Result;
+            using var response = _httpClient.PostAsync("/db/execute", content).Result;
             response.EnsureSuccessStatusCode();
         }
         private string EscapeString(string value)
@@ -183,7 +183,7 @@ namespace Indexer
             var payload = JsonSerializer.Serialize(new[] { sql });
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("db/query", content);
+            var response = await _httpClient.PostAsync("/db/query", content);
 
             if (!response.IsSuccessStatusCode)
             {
