@@ -238,10 +238,10 @@ public class RqliteDatabase : IDatabase
             return cachedResult;
         }
 
-        string sql = "SELECT s.id, s.name AS Synonym" +
-                     "FROM Word_Synonym ws" +
-                     "JOIN word w ON ws.wordId = w.id" +
-                     "JOIN Synonym s ON ws.synonymId = s.id" +
+        string sql = "SELECT s.id, s.name AS Synonym " +
+                     "FROM Word_Synonym ws " +
+                     "JOIN word w ON ws.wordId = w.id " +
+                     "JOIN Synonym s ON ws.synonymId = s.id " +
                     $"WHERE w.name = '{EscapeString(word)}';";
 
         List<Synonym> result = Query(sql, row =>
