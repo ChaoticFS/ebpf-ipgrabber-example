@@ -11,6 +11,18 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
+            echo "Deleting the database";
+            curl -v -XPOST "http://rqlite:80/db/execute" \
+                -H "Content-type: application/json" \
+                -d '[
+                      "DROP TABLE IF EXISTS Occ",
+                      "DROP TABLE IF EXISTS Word_Synonym",
+                      "DROP TABLE IF EXISTS Synonym",
+                      "DROP TABLE IF EXISTS word",
+                      "DROP TABLE IF EXISTS document"
+                   ]'
+            echo "Successfully deleted database"
+
             echo "Loading database into rqlite";
             curl -v -XPOST 'rqlite:80/db/load' \
             -H "Content-type: application/octet-stream" \
