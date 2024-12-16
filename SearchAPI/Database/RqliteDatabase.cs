@@ -1,30 +1,20 @@
 ﻿using Shared.Model;
-using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using SearchAPI.Services;
+using System.Text;
 
 namespace SearchAPI.Database;
-public class LocalDatabase : IDatabase
+public class RqliteDatabase : IDatabase
 {
     private IConfiguration _configuration;
-    private SqliteConnection _connection;
+    private HttpClient _httpClient;
     private ICacheService _cacheService;
 
-    public LocalDatabase(IConfiguration configuration, ICacheService cacheService)
+    public RqliteDatabase(IConfiguration configuration, ICacheService cacheService)
     {
-        var connectionStringBuilder = new SqliteConnectionStringBuilder();
-
         _configuration = configuration;
 
-        var relativePath = _configuration["Database:Path"];
-
-        var absolutePath = Path.GetFullPath(relativePath, AppContext.BaseDirectory);
-
-        connectionStringBuilder.DataSource = absolutePath;
-
-        _connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-
-        _connection.Open();
+        _httpClient = new HttpClient { BaseAddress = new Uri(_configuration["Database:ConnectionString"]) };
 
         _cacheService = cacheService;
     }
@@ -34,38 +24,22 @@ public class LocalDatabase : IDatabase
     // key is the id of the document, the value is number of search words in the document
     public Dictionary<int, int> GetDocuments(List<int> wordIds)
     {
-        var res = new Dictionary<int, int>();
+        var sql = "SELECT docId, ocurrences AS count " +
+                  "FROM Occ " +
+                 $"WHERE wordId in {AsString(wordIds)} " + 
+                  "GROUP BY docId " + 
+                  "ORDER BY count DESC;";
 
-        /* Example sql statement looking for doc id's that
-           contain words with id 2 and 3
-        
-           SELECT docId, COUNT(wordId) as count
-             FROM Occ
-            WHERE wordId in (2,3)
-         GROUP BY docId
-         ORDER BY COUNT(wordId) DESC 
-         */
-
-        var sql = "SELECT docId, ocurrences as count FROM Occ where ";
-        sql += "wordId in " + AsString(wordIds) + " GROUP BY docId ";
-        sql += "ORDER BY count DESC;";
-
-
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = sql;
-
-        using (var reader = selectCmd.ExecuteReader())
+        var pairs = Query(sql, row =>
         {
-            while (reader.Read())
-            {
-                var docId = reader.GetInt32(0);
-                var count = reader.GetInt32(1);
+            var id = row[0].GetInt32();
+            var count = row[1].GetInt32();
+            return new KeyValuePair<int, int>(id, count);
+        }).Result;
 
-                res.Add(docId, count);
-            }
-        }
+        var result = new Dictionary<int, int>(pairs);
 
-        return res;
+        return result;
     }
 
     private Dictionary<string, int> GetAllWords()
@@ -78,109 +52,82 @@ public class LocalDatabase : IDatabase
             return cachedResult;
         }
 
-        Dictionary<string, int> res = new Dictionary<string, int>();
+        string sql = "SELECT * FROM word";
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = "SELECT * FROM word";
-
-        using (var reader = selectCmd.ExecuteReader())
+        var pairs = Query(sql, row =>
         {
-            int duplicates = 0;
+            var id = row[0].GetInt32();
+            var word = row[1].GetString();
+            return new KeyValuePair<string, int>(word, id);
+        }).Result;
 
-            while (reader.Read())
-            {
-                var id = reader.GetInt32(0);
-                var w = reader.GetString(1);
+        var result = new Dictionary<string, int>(pairs);
 
-                if (!res.TryAdd(w, id))
-                {
-                    duplicates++;
-                }
-            }
-
-            if (duplicates > 0)
-            {
-                Console.WriteLine(duplicates + " duplicate words skipped");
-                Console.WriteLine("This only shows up if you ran the indexer more than once, double check things");
-            }
-        }
 
         TimeSpan expiration = TimeSpan.FromMinutes(30);
-        _cacheService.SetAsync("words", res, expiration);
+        _cacheService.SetAsync("words", result, expiration);
         Console.WriteLine("Cache miss for getting all words");
 
-        return res;
+        return result;
     }
 
     public List<ResultDocument> GetDocDetails(Dictionary<int, int> docIdOcc)
     {
-        List<ResultDocument> res = new List<ResultDocument>();
+        string sql = "SELECT * " +
+                     "FROM document " +
+                     "WHERE id IN " + AsString(docIdOcc.Keys.ToList());
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = "SELECT * FROM document where id in " + AsString(docIdOcc.Keys.ToList());
-
-        using (var reader = selectCmd.ExecuteReader())
+        List<ResultDocument> result = Query(sql, row =>
         {
-            while (reader.Read())
-            {
-                var id = reader.GetInt32(0);
-                var url = reader.GetString(1);
-                var idxTime = reader.GetString(2);
-                var creationTime = reader.GetString(3);
+            var id = row[0].GetInt32();
 
-                res.Add(new ResultDocument { Id = id, Url = url, IdxTime = idxTime, CreationTime = creationTime, Count = docIdOcc[id] });
-            }
-        }
-        return res;
+            return new ResultDocument
+            {
+                Id = id,
+                Url = row[1].ToString(),
+                IdxTime = row[2].ToString(),
+                CreationTime = row[3].ToString(),
+                Count = docIdOcc[id]
+            };
+        }).Result;
+
+        return result;
     }
 
     /* Return a list of id's for words; all them among wordIds, but not present in the document
      */
     public List<int> getMissing(int docId, List<int> wordIds)
     {
-        var sql = "SELECT wordId FROM Occ where ";
-        sql += "wordId in " + AsString(wordIds) + " AND docId = " + docId;
-        sql += " ORDER BY wordId;";
+        var sql = "SELECT wordId FROM Occ " +
+                 $"WHERE wordId IN {AsString(wordIds)} " +  
+                 $"AND docId = {docId} " +
+                  "ORDER BY wordId;";
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = sql;
-
-        List<int> present = new List<int>();
-
-        using (var reader = selectCmd.ExecuteReader())
+        List<int> present = Query(sql, row =>
         {
-            while (reader.Read())
-            {
-                var wordId = reader.GetInt32(0);
-                present.Add(wordId);
-            }
-        }
+            return row[0].GetInt32();
+        }).Result;
+
         var result = new List<int>(wordIds);
         foreach (var w in present)
+        {
             result.Remove(w);
-
+        }
 
         return result;
     }
 
     public List<string> WordsFromIds(List<int> wordIds)
     {
-        var sql = "SELECT name FROM Word where ";
-        sql += "id in " + AsString(wordIds);
+        var sql = "SELECT name " +
+                  "FROM word " +
+                  "WHERE id IN " + AsString(wordIds);
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = sql;
-
-        List<string> result = new List<string>();
-
-        using (var reader = selectCmd.ExecuteReader())
+        List<string> result = Query(sql, row =>
         {
-            while (reader.Read())
-            {
-                var wordId = reader.GetString(0);
-                result.Add(wordId);
-            }
-        }
+            return row[0].ToString();
+        }).Result;
+
         return result;
     }
 
@@ -291,167 +238,82 @@ public class LocalDatabase : IDatabase
             return cachedResult;
         }
 
-        var synonyms = new List<Synonym>();
+        string sql = "SELECT s.id, s.name AS Synonym" +
+                     "FROM Word_Synonym ws" +
+                     "JOIN word w ON ws.wordId = w.id" +
+                     "JOIN Synonym s ON ws.synonymId = s.id" +
+                    $"WHERE w.name = '{EscapeString(word)}';";
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = @"SELECT s.id, s.name AS Synonym
-                                  FROM Word_Synonym ws
-                                  JOIN word w ON ws.wordId = w.id
-                                  JOIN Synonym s ON ws.synonymId = s.id
-                                  WHERE w.name = @wordName;";
-        selectCmd.Parameters.AddWithValue("@wordName", word);
-
-        using (var reader = selectCmd.ExecuteReader())
+        List<Synonym> result = Query(sql, row =>
         {
-            while (reader.Read())
+            return new Synonym
             {
-                synonyms.Add(new Synonym
-                {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1)
-                });
-            }
-        }
+                Id = row[0].GetInt32(),
+                Name = row[1].GetString(),
+            };
+        }).Result;
+
 
         TimeSpan expiration = TimeSpan.FromMinutes(30);
-        _cacheService.SetAsync($"synonyms:{word}", synonyms, expiration);
+        _cacheService.SetAsync($"synonyms:{word}", result, expiration);
         Console.WriteLine($"Cache miss for synonyms of word: {word}");
 
-        return synonyms;
+        return result;
     }
 
     
     public int AddSynonym(string synonym)
     {
-        using (var transaction = _connection.BeginTransaction())
-        {
-            var command = _connection.CreateCommand();
-            command.CommandText =
-                @"INSERT INTO Synonym(name) 
-          VALUES(@name);
-          SELECT last_insert_rowid();";
-                
-        
-            var paramName = command.CreateParameter();
-            paramName.ParameterName = "name";
-            paramName.Value = synonym;
-            command.Parameters.Add(paramName);
-            
-            var id = Convert.ToInt32(command.ExecuteScalar());
-                
-            transaction.Commit();
+        string sqlInsert = "INSERT INTO Synonym(name) " +
+                          $"VALUES('{EscapeString(synonym)}')";
 
-            _cacheService.ClearAsync();
+        int id = ExecuteAndGetId(sqlInsert).Result;
 
-            return id;
-        }
+        _cacheService.ClearAsync();
+
+        return id;
     }
-    
-    
 
     public void UpdateSynonym(Synonym synonym)
     {
-        using (var transaction = _connection.BeginTransaction())
-        {
-            var command = _connection.CreateCommand();
-            command.CommandText =
-            @"UPDATE Synonym 
-              SET name = @name
-              WHERE id = @id";
+        string sql = "UPDATE Synonym " +
+                    $"SET name = '{EscapeString(synonym.Name)}' " +
+                    $"WHERE id = {synonym.Id}";
 
-            var paramName = command.CreateParameter();
-            paramName.ParameterName = "name";
-            paramName.Value = synonym.Name;
-            command.Parameters.Add(paramName);
-
-            var paramId = command.CreateParameter();
-            paramId.ParameterName = "id";
-            paramId.Value = synonym.Id;
-            command.Parameters.Add(paramId);
-
-            command.ExecuteNonQuery();
-
-            _cacheService.ClearAsync();
-
-            transaction.Commit();
-        }
+        Execute(sql);
+        
+        _cacheService.ClearAsync();
     }
 
     public void DeleteSynonym(int synonymId) 
     {
-        using (var transaction = _connection.BeginTransaction())
-        {
-            var command = _connection.CreateCommand();
-            command.CommandText =
-            @"DELETE FROM Synonym 
-              WHERE id = @id";
+        string sql = "DELETE FROM Synonym " +
+                    $"WHERE id = {synonymId}";
 
-            var paramId = command.CreateParameter();
-            paramId.ParameterName = "id";
-            paramId.Value = synonymId;
-            command.Parameters.Add(paramId);
+        Execute(sql);
 
-            command.ExecuteNonQuery();
-
-            _cacheService.ClearAsync();
-
-            transaction.Commit();
-        }
+        _cacheService.ClearAsync();
     }
 
     public void AddSynonymWord(int synonymId, int wordId)
     {
-        using (var transaction = _connection.BeginTransaction())
-        {
-            var command = _connection.CreateCommand();
-            command.CommandText =
-            @"INSERT INTO Word_Synonym(wordId, synonymId) 
-              VALUES(@wordId, @synonymId)";
+        string sql = "INSERT INTO Word_Synonym(wordId, synonymId) " +
+                    $"VALUES({wordId}, {synonymId})";
 
-            var paramWord = command.CreateParameter();
-            paramWord.ParameterName = "wordId";
-            paramWord.Value = wordId;
-            command.Parameters.Add(paramWord);
+        Execute(sql);
 
-            var paramSynonym = command.CreateParameter();
-            paramSynonym.ParameterName = "synonymId";
-            paramSynonym.Value = synonymId;
-            command.Parameters.Add(paramSynonym);
-
-            command.ExecuteNonQuery();
-
-            _cacheService.ClearAsync();
-
-            transaction.Commit();
-        }
+        _cacheService.ClearAsync();
     }
 
     public void DeleteSynonymWord(int synonymId, int wordId)
     {
-        using (var transaction = _connection.BeginTransaction())
-        {
-            var command = _connection.CreateCommand();
-            command.CommandText =
-            @"DELETE FROM Word_Synonym 
-              WHERE wordId = @wordId 
-              AND synonymId = @synonymId";
+        string sql = "DELETE FROM Word_Synonym " +
+                    $"WHERE wordId = {wordId} " +
+                    $"AND synonymId = {synonymId}";
 
-            var paramWord = command.CreateParameter();
-            paramWord.ParameterName = "wordId";
-            paramWord.Value = wordId;
-            command.Parameters.Add(paramWord);
+        Execute(sql);
 
-            var paramSynonym = command.CreateParameter();
-            paramSynonym.ParameterName = "synonymId";
-            paramSynonym.Value = synonymId;
-            command.Parameters.Add(paramSynonym);
-
-            command.ExecuteNonQuery();
-
-            _cacheService.ClearAsync();
-
-            transaction.Commit();
-        }
+        _cacheService.ClearAsync();
     }
     
     public List<Synonym> GetAllSynonyms()
@@ -464,27 +326,83 @@ public class LocalDatabase : IDatabase
             return cachedResult;
         }
 
-        var synonyms = new List<Synonym>();
+        string sql = @"SELECT id, name FROM Synonym";
 
-        var selectCmd = _connection.CreateCommand();
-        selectCmd.CommandText = @"SELECT id, name FROM Synonym";
-
-        using (var reader = selectCmd.ExecuteReader())
+        List<Synonym> result = Query(sql, row =>
         {
-            while (reader.Read())
+            return new Synonym
             {
-                synonyms.Add(new Synonym
-                {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1)
-                });
-            }
-        }
+                Id = row[0].GetInt32(),
+                Name = row[1].GetString(),
+            };
+        }).Result;
 
         TimeSpan expiration = TimeSpan.FromMinutes(30);
-        _cacheService.SetAsync($"synonyms", synonyms, expiration);
+        _cacheService.SetAsync($"synonyms", result, expiration);
         Console.WriteLine("Cache miss for all synonyms");
 
-        return synonyms;
+        return result;
+    }
+
+    private void Execute(string sql)
+    {
+        var payload = JsonSerializer.Serialize(new[] { sql });
+        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        using var response = _httpClient.PostAsync("/execute", content).Result;
+        response.EnsureSuccessStatusCode();
+    }
+
+    private string EscapeString(string value)
+    {
+        // Escape single quotes for SQL strings
+        return value.Replace("'", "''"); 
+    }
+
+    private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
+    {
+        var payload = JsonSerializer.Serialize(new[] { sql });
+        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("/query", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"Failed to execute query: {response.StatusCode} - {response.ReasonPhrase}");
+        }
+
+        var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var rows = responseJson.RootElement.GetProperty("results")[0].GetProperty("values");
+
+        var result = new List<T>();
+        foreach (var row in rows.EnumerateArray())
+        {
+            result.Add(mapFunc(row));
+        }
+
+        return result;
+    }
+
+    private async Task<int> ExecuteAndGetId(string sql)
+    {
+        var payload = JsonSerializer.Serialize(new[] { sql });
+        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("/execute", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"Failed to execute query with id return: {response.StatusCode} - {response.ReasonPhrase}");
+        }
+
+        var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var result = responseJson.RootElement.GetProperty("results")[0];
+
+        if (result.TryGetProperty("last_insert_id", out var lastInsertId))
+        {
+            return lastInsertId.GetInt32();
+        }
+
+        throw new Exception("Execute with id return did not return a last_insert_id");
     }
 }

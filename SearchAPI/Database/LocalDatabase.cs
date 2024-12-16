@@ -1,16 +1,15 @@
 ﻿using Shared.Model;
 using Microsoft.Data.Sqlite;
-using System.Text.Json;
 using SearchAPI.Services;
 
 namespace SearchAPI.Database;
-public class RqliteDatabase : IDatabase
+public class LocalDatabase : IDatabase
 {
     private IConfiguration _configuration;
     private SqliteConnection _connection;
     private ICacheService _cacheService;
 
-    public RqliteDatabase(IConfiguration configuration, ICacheService cacheService)
+    public LocalDatabase(IConfiguration configuration, ICacheService cacheService)
     {
         var connectionStringBuilder = new SqliteConnectionStringBuilder();
 

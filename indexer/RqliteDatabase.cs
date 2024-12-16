@@ -1,15 +1,18 @@
 ﻿using System.Collections.Generic;
 using Shared.Model;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text;
+using System;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Indexer
 {
     public class RqliteDatabase : IDatabase
     {
+        private HttpClient _httpClient;
         private string _connection;
         private IConfiguration _configuration;
 
@@ -17,18 +20,10 @@ namespace Indexer
         {
             _configuration = configuration;
 
-            var connectionStringBuilder = new SqliteConnectionStringBuilder();
-
-            connectionStringBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
-
-            connectionStringBuilder.DataSource = _configuration["Database:Path"];
+            _httpClient = new HttpClient { BaseAddress = new Uri(_configuration["Database:ConnectionString"]) };
 
             if (_configuration["SKIP_PROCESSING"] == "false")
             {
-                _connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-
-                _connection.Open();
-
                 Execute("DROP TABLE IF EXISTS Occ");
                 Execute("DROP TABLE IF EXISTS Word_Synonym");
                 Execute("DROP TABLE IF EXISTS Synonym");
@@ -52,213 +47,159 @@ namespace Indexer
             }
         }
 
-        private void Execute(string sql)
-        {
-            var cmd = _connection.CreateCommand();
-            cmd.CommandText = sql;
-            cmd.ExecuteNonQuery();
-        }
-
         public void InsertAllWords(Dictionary<string, int> res)
         {
-            using (var transaction = _connection.BeginTransaction())
+            if (res == null || res.Count == 0)
+                return;
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.AppendLine("BEGIN TRANSACTION;");
+
+            foreach (var pair in res)
             {
-                var command = _connection.CreateCommand();
-                command.CommandText =
-                @"INSERT INTO word(id, name) VALUES(@id,@name)";
-
-                var paramName = command.CreateParameter();
-                paramName.ParameterName = "name";
-                command.Parameters.Add(paramName);
-
-                var paramId = command.CreateParameter();
-                paramId.ParameterName = "id";
-                command.Parameters.Add(paramId);
-
-                // Insert all entries in the res
-
-                foreach (var p in res)
-                {
-                    paramName.Value = p.Key;
-                    paramId.Value = p.Value;
-                    command.ExecuteNonQuery();
-                }
-
-                transaction.Commit();
+                sqlBuilder.AppendLine($"INSERT INTO word(id, name) VALUES({pair.Value}, '{EscapeString(pair.Key)}');");
             }
+
+            sqlBuilder.AppendLine("COMMIT;");
+
+            Execute(sqlBuilder.ToString());
         }
 
-        public void InsertAllOcc(int docId, Dictionary<int, int> wordIds){
-            using (var transaction = _connection.BeginTransaction())
+        public void InsertAllOcc(int docId, Dictionary<int, int> wordIds)
+        {
+            if (wordIds == null || wordIds.Count == 0)
+                return;
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.AppendLine("BEGIN TRANSACTION;");
+
+            foreach (var pair in wordIds)
             {
-                var command = _connection.CreateCommand();
-                command.CommandText =
-                @"INSERT INTO Occ(wordId, docId, ocurrences) VALUES(@wordId,@docId,@ocurrences)";
-
-                var paramwordId = command.CreateParameter();
-                paramwordId.ParameterName = "wordId";
-
-                command.Parameters.Add(paramwordId);
-
-                var paramDocId = command.CreateParameter();
-                paramDocId.ParameterName = "docId";
-                paramDocId.Value = docId;
-
-                command.Parameters.Add(paramDocId);
-
-                var paramocurrences = command.CreateParameter();
-                paramocurrences.ParameterName = "ocurrences";
-
-                command.Parameters.Add(paramocurrences);
-
-                foreach (var p in wordIds)
-                {
-                    paramwordId.Value = p.Key;
-                    paramocurrences.Value = p.Value;
-
-                    command.ExecuteNonQuery();
-                }
-
-                transaction.Commit();
+                sqlBuilder.AppendLine($"INSERT INTO Occ(wordId, docId, ocurrences) VALUES({pair.Key}, {docId}, {pair.Value});");
             }
+
+            sqlBuilder.AppendLine("COMMIT;");
+
+            Execute(sqlBuilder.ToString());
         }
 
         public void InsertWord(int id, string value){
-            var insertCmd = new SqliteCommand("INSERT INTO word(id, name) VALUES(@id,@name)");
-            insertCmd.Connection = _connection;
+            string sql = "INSERT INTO word(id, name) " +
+                        $"VALUES({id},'{EscapeString(value)}')";
 
-            var pName = new SqliteParameter("name", value);
-            insertCmd.Parameters.Add(pName);
-
-            var pCount = new SqliteParameter("id", id);
-            insertCmd.Parameters.Add(pCount);
-
-            insertCmd.ExecuteNonQuery();
+            Execute(sql);
         }
 
-        public void InsertDocument(BEDocument doc){
-            var insertCmd = new SqliteCommand("INSERT INTO document(id, url, idxTime, creationTime) VALUES(@id,@url, @idxTime, @creationTime)");
-            insertCmd.Connection = _connection;
+        public void InsertDocument(BEDocument doc)
+        {
+            string sql = ("INSERT INTO document(id, url, idxTime, creationTime) " +
+                         $"VALUES({doc.mId},'{EscapeString(doc.mUrl)}','{EscapeString(doc.mIdxTime)}','{EscapeString(doc.mCreationTime)}')");
 
-            var pId = new SqliteParameter("id", doc.mId);
-            insertCmd.Parameters.Add(pId);
-
-            var pUrl = new SqliteParameter("url", doc.mUrl);
-            insertCmd.Parameters.Add(pUrl);
-
-            var pIdxTime = new SqliteParameter("idxTime", doc.mIdxTime);
-            insertCmd.Parameters.Add(pIdxTime);
-
-            var pCreationTime = new SqliteParameter("creationTime", doc.mCreationTime);
-            insertCmd.Parameters.Add(pCreationTime);
-
-            insertCmd.ExecuteNonQuery();
-
+            Execute(sql);
         }
         
         public BEDocument GetDocumentById(int docId)
         {
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "SELECT id, url, idxTime, creationTime FROM document WHERE id = @id";
-    
-            var paramDocId = selectCmd.CreateParameter();
-            paramDocId.ParameterName = "id";
-            paramDocId.Value = docId;
-            selectCmd.Parameters.Add(paramDocId);
+            string sql = "SELECT id, url, idxTime, creationTime " +
+                         "FROM document " +
+                        $"WHERE id = {docId}";
 
-            using (var reader = selectCmd.ExecuteReader())
+            var result = Query(sql, row =>
             {
-                if (reader.Read())
+                return new BEDocument
                 {
-                    return new BEDocument
-                    {
-                        mId = reader.GetInt32(0),
-                        mUrl = reader.GetString(1),
-                        mIdxTime = reader.GetString(2),
-                        mCreationTime = reader.GetString(3)
-                    };
-                }
-            }
-            return null;
-        }
+                    mId = row[0].GetInt32(),
+                    mUrl = row[1].GetString(),
+                    mIdxTime = row[2].GetString(),
+                    mCreationTime = row[3].GetString()
+                };
+            }).Result;
 
+            return result.FirstOrDefault();
+        }
 
         public Dictionary<string, int> GetAllWords()
         {
-            Dictionary<string, int> res = new Dictionary<string, int>();
+            string sql = "SELECT * FROM word";
 
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "SELECT * FROM word";
-
-            using (var reader = selectCmd.ExecuteReader())
+            var result = Query(sql, row =>
             {
-                while (reader.Read())
-                {
-                    var id = reader.GetInt32(0);
-                    var w = reader.GetString(1);
+                var id = row[0].GetInt32();
+                var word = row[1].GetString();
+                return new KeyValuePair<string, int>(word, id);
+            }).Result;
 
-                    res.Add(w, id);
-                }
-            }
-            return res;
+            return new Dictionary<string, int>(result);
         }
         
         public List<Term> GetAllWordCounts()
         {
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "select Occ.wordId as Id, count(occ.wordId) as countWord, Word.name as Name "+
-                                    "from Occ JOIN Word on Occ.wordId = Word.id " + 
-                                    "group by Occ.wordId order by countWord DESC";
+            string sql = "SELECT Occ.wordId AS Id, count(occ.wordId) AS countWord, Word.name AS Name "+
+                         "FROM Occ " +
+                         "JOIN Word ON Occ.wordId = Word.id " + 
+                         "GROUP BY Occ.wordId " +
+                         "ORDER BY countWord DESC";
 
-            List<Term> result = new();
-            using (var reader = selectCmd.ExecuteReader())
+            List<Term> result = Query(sql, row =>
             {
-                while (reader.Read())
+                return new Term
                 {
-                    var id = reader.GetInt32(0);
-                    var cc = reader.GetInt32(1);
-                    var name = reader.GetString(2);
-
-                    result.Add(new Term { Id = id, Value = name, Count = cc});
-                }
-            }
+                    Id = row[0].GetInt32(),
+                    Count = row[1].GetInt32(),
+                    Value = row[2].GetString()
+                };
+            }).Result;
+            
             return result;
         }
-        
-        
 
-        public int GetDocumentCounts() {
-            var selectCmd = _connection.CreateCommand();
-            selectCmd.CommandText = "SELECT count(*) FROM document";
+        public int GetDocumentCounts() 
+        {
+            string sql = "SELECT count(*) FROM document";
 
-            using (var reader = selectCmd.ExecuteReader()) {
-                if (reader.Read()) {
-                    var count = reader.GetInt32(0);
-                    return count;
-                }
-            }
-            return -1;
+            var count = Query(sql, row =>
+            {
+                return row[0].GetInt32();
+            }).Result;
+
+            return count.FirstOrDefault();
         }
 
-        private void Execute(string query)
+        private void Execute(string sql)
         {
-            var queryUrl = $"{_connection}/db/execute?pretty&timings";
-
-            var payload = JsonSerializer.Serialize(new[] { query });
+            var payload = JsonSerializer.Serialize(new[] { sql });
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            using var response = _httpClient.PostAsync(queryUrl, content).Result;
+            using var response = _httpClient.PostAsync("db/execute", content).Result;
             response.EnsureSuccessStatusCode();
-
-            var jsonResponse = response.Content.ReadAsStringAsync().Result;
-            var parsedResponse = JsonSerializer.Deserialize<RqliteQueryResponse>(jsonResponse);
-
-            return parsedResponse?.Results[0]?.Values ?? new List<Dictionary<string, object>>();
+        }
+        private string EscapeString(string value)
+        {
+            return value.Replace("'", "''"); // Escape single quotes for SQL strings
         }
 
-        private void Select(string query)
+        private async Task<List<T>> Query<T>(string sql, Func<JsonElement, T> mapFunc)
         {
-            var queryUrl = $"{_connection}/db/query?pretty&timings";
+            var payload = JsonSerializer.Serialize(new[] { sql });
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("db/query", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to execute query: {response.StatusCode} - {response.ReasonPhrase}");
+            }
+
+            var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            var rows = responseJson.RootElement.GetProperty("results")[0].GetProperty("values");
+
+            var result = new List<T>();
+            foreach (var row in rows.EnumerateArray())
+            {
+                result.Add(mapFunc(row));
+            }
+
+            return result;
         }
     }
 }

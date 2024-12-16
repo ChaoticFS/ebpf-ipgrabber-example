@@ -1,10 +1,10 @@
 ﻿Last updated: 14/12/24
 
-Deploying to kubernetes via kubectl, minikube and docker desktop
+# Deploying to kubernetes via kubectl, minikube and docker desktop
 
-These commands need to be run in order to deploy it to k8s
+# These commands need to be run in order to deploy it to k8s
 
-Open Docker Desktop
+# Open Docker Desktop
 
 minikube start
 
