@@ -368,7 +368,7 @@ public class RqliteDatabase : IDatabase
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to execute query: {response.StatusCode} - {response.ReasonPhrase}");
+            throw new Exception($"Failed to execute query on {_httpClient.BaseAddress}/query: {response.StatusCode} - {response.ReasonPhrase}");
         }
 
         var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -392,7 +392,7 @@ public class RqliteDatabase : IDatabase
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to execute query with id return: {response.StatusCode} - {response.ReasonPhrase}");
+            throw new Exception($"Failed to execute query with id return on {_httpClient.BaseAddress}/execute: {response.StatusCode} - {response.ReasonPhrase}");
         }
 
         var responseJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
