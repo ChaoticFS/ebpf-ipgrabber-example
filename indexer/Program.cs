@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +18,20 @@ class Program
             })
             .ConfigureServices((context, services) =>
             {
-                services.AddSingleton<IDatabase, Database>();
+                var connectionString = context.Configuration["Database:ConnectionString"];
+
+                if (!string.IsNullOrEmpty(connectionString))
+                {
+                    Console.Write("Initializing Rqlite Database");
+                    services.AddSingleton<IDatabase, RqliteDatabase>();
+                }
+                else
+                {
+                    Console.WriteLine("Initializing Local Database");
+                    services.AddSingleton<IDatabase, LocalDatabase>();
+                }
+
+                services.AddSingleton<IDatabase, LocalDatabase>();
                 services.AddScoped<Crawler>();
                 services.AddScoped<App>();
             })

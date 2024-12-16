@@ -5,12 +5,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace Indexer
 {
-    public class Database : IDatabase
+    public class LocalDatabase : IDatabase
     {
         private SqliteConnection _connection;
         private IConfiguration _configuration;
 
-        public Database(IConfiguration configuration)
+        public LocalDatabase(IConfiguration configuration)
         {
             _configuration = configuration;
 

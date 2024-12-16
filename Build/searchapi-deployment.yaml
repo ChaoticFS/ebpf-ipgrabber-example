@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: searchapi
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: searchapi
@@ -12,26 +12,6 @@ spec:
       labels:
         app: searchapi
     spec:
-      initContainers:
-      - name: renamer
-        image: magnusov/renamer:latest
-        envFrom:
-        - configMapRef:
-            name: config-values
-        ports:
-        volumeMounts:
-        - name: sqlite-data
-          mountPath: /app/data
-      
-      - name: indexer
-        image: magnusov/indexer:latest 
-        envFrom:
-        - configMapRef:
-            name: config-values
-        volumeMounts:
-        - name: sqlite-data
-          mountPath: /app/data
-
       containers:
       - name: searchapi
         image: magnusov/searchapi:latest
@@ -40,14 +20,13 @@ spec:
             name: config-values
         ports:
         - containerPort: 5262
-        volumeMounts:
-        - name: sqlite-data
-          mountPath: /app/data  # Path inside the container
-      volumes:
-      - name: sqlite-data
-        hostPath:
-          path: /mnt/data # Local path to data, run minikube mount "path/to/your/data:/mnt/data" to make it work
-          type: Directory
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 250m
+          limits:
+            memory: 256Mi
+            cpu: 500m
 ---
 apiVersion: v1
 kind: Service
@@ -60,4 +39,4 @@ spec:
     - protocol: TCP
       port: 5262  # External port
       targetPort: 5262  # Internal port
-  type: LoadBalancer
+  type: ClusterIP

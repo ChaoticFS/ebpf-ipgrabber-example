@@ -1,44 +1,33 @@
-﻿Version 1: 23-8-2024
+﻿Last updated: 14/12/24
 
-A seachengine that consist of an indexer and a search program.
+# Deploying to kubernetes via kubectl, minikube and docker desktop
 
-The indexer will crawl a folder (in depth) and create a reverse index
-in a database. It will only index text files with .txt as extension.
+# These commands need to be run in order to deploy it to k8s
 
-The search program is a console program that offers a query-based search
-in the reverse index. It is in the ConsoleSearch project.
-
-The class library Shared contains classes that are used by the indexer
-and the ConsoleSearch. It contains:
-
-- Paths containing static paths for 1) files to index and, 2) a path for
-  the database
-- BEDocument (BE for Business Entity) - a class representing a document.
-
-The project Renamer is a console program used to rename all files in a
-folder. Current version will rename all files with no extension to have
-.txt as extension.
-
-
-Version 2: 22-11-2024
-
-Deploying to kubernetes via kubectl, minikube and docker desktop
-
-These commands need to be run in order to deploy it to k8s
-
-Open Docker Desktop
+# Open Docker Desktop
 
 minikube start
 
 minikube dashboard # Will lock your terminal, start an extra
 
-minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data" # Will lock your terminal, start an extra
-
+# I'd recommend opening like 4 terminals and doing the following command in them all:
 cd "path/to/your/repo"
 
 helm upgrade --install --values Build/monitoring-deployment.yaml loki grafana/loki-stack -n grafana-loki --create-namespace
 
-# If you've already renamed/indexed go into the config-values.yaml and change the SKIP_PROCESSING var to true
+helm upgrade --install --values Build/database-deployment.yaml rqlite rqlite/rqlite --create-namespace
+
+# ONLY RUN THESE STEPS IF YOU WANT TO MESS WITH THE DB
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data"
+
+# if you want to migrate an existing sqlite file to rqlite:
+kubectl apply -f Build/database-migration.yaml
+
+# if you want to reindex (NOT RECOMMENDED, should do it locally):
+kubectl apply -f Build/database-initialization.yaml
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 kubectl apply -f Build/config-values.yaml
 
 kubectl apply -f Build/cache-deployment.yaml
