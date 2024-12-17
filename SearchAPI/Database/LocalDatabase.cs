@@ -398,23 +398,25 @@ public class LocalDatabase : IDatabase
         }
     }
 
-    public void AddSynonymWord(int synonymId, int wordId)
+    public void AddSynonymWord(string synonym, string word)
     {
         using (var transaction = _connection.BeginTransaction())
         {
             var command = _connection.CreateCommand();
-            command.CommandText =
-            @"INSERT INTO Word_Synonym(wordId, synonymId) 
-              VALUES(@wordId, @synonymId)";
+            command.CommandText = "INSERT INTO Word_Synonym (wordId, synonymId) " +
+                                  "VALUES (" +
+                                     "(SELECT id FROM word WHERE name = @word), " +
+                                     "(SELECT id FROM Synonym WHERE name = @synonym)" +
+                                  ");";
 
             var paramWord = command.CreateParameter();
-            paramWord.ParameterName = "wordId";
-            paramWord.Value = wordId;
+            paramWord.ParameterName = "word";
+            paramWord.Value = word;
             command.Parameters.Add(paramWord);
 
             var paramSynonym = command.CreateParameter();
-            paramSynonym.ParameterName = "synonymId";
-            paramSynonym.Value = synonymId;
+            paramSynonym.ParameterName = "synonym";
+            paramSynonym.Value = synonym;
             command.Parameters.Add(paramSynonym);
 
             command.ExecuteNonQuery();

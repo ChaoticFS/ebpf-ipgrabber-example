@@ -114,16 +114,16 @@ public class SynonymController : ControllerBase
     }
 
     [HttpPost("synonym/word")]
-    public IActionResult PostSynonymWord([FromQuery] int synonymId, int wordId)
+    public IActionResult PostSynonymWord([FromQuery] string synonym, string word)
     {
-        if (synonymId == 0 || wordId == 0)
+        if (string.IsNullOrEmpty(synonym) || string.IsNullOrEmpty(word))
         {
-            return BadRequest("Id cannot be 0");
+            return BadRequest("Value cannot be empty");
         }
 
         try
         {
-            _database.AddSynonymWord(synonymId, wordId);
+            _database.AddSynonymWord(synonym, word);
             return Ok();
         }
         catch (Exception ex)

@@ -46,7 +46,7 @@ public interface IDatabase
     int AddSynonym(string synonym);
     void UpdateSynonym(Synonym synonym);
     void DeleteSynonym(int synonymId);
-    void AddSynonymWord(int synonymId, int wordId);
+    void AddSynonymWord(string synonym, string word);
     void DeleteSynonymWord(int synonymId, int wordId);
     
     /// <summary>

@@ -295,10 +295,13 @@ public class RqliteDatabase : IDatabase
         _cacheService.ClearAsync().Wait();
     }
 
-    public void AddSynonymWord(int synonymId, int wordId)
+    public void AddSynonymWord(string synonym, string word)
     {
-        string sql = "INSERT INTO Word_Synonym(wordId, synonymId) " +
-                    $"VALUES({wordId}, {synonymId})";
+        string sql = "INSERT INTO Word_Synonym (wordId, synonymId) " +
+                     "VALUES (" +
+                       $"(SELECT id FROM word WHERE name = '{EscapeString(word)}'), " +
+                       $"(SELECT id FROM Synonym WHERE name = '{EscapeString(synonym)}')" +
+                     ");";
 
         Execute(sql);
 
