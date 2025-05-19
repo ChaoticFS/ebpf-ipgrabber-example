@@ -19,7 +19,7 @@ helm upgrade --install --values Build/database-deployment.yaml rqlite rqlite/rql
 
 # ONLY RUN THESE STEPS IF YOU WANT TO MESS WITH THE DB
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-minikube mount "path/to/searchCase/seData/seData copy/medium:/mnt/data"
+minikube mount "C:/Users/magnu/source/repos/searchCase/seData/seData copy/medium:/mnt/data"
 
 # if you want to migrate an existing sqlite file to rqlite:
 kubectl apply -f Build/database-migration.yaml
@@ -33,8 +33,6 @@ kubectl apply -f Build/config-values.yaml
 kubectl apply -f Build/cache-deployment.yaml
 
 kubectl apply -f Build/searchapi-deployment.yaml
-
-kubectl port-forward svc/searchapi-service 5262:5262
 
 kubectl apply -f Build/websearch-deployment.yaml
 
