@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN dotnet clean
-RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish
+RUN dotnet publish /app/WebSearch/WebSearch.csproj -c Release -o /app/publish -p:EnvironmentName=Production
 
 FROM nginx:alpine AS runtime
 WORKDIR /usr/share/nginx/html
